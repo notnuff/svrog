@@ -1,0 +1,7 @@
+<RCC>
+    <qresource prefix="/scenegraph/demo">
+        <file>main.qml</file>
+        <file>demo.vert.spv</file>
+        <file>demo.frag.spv</file>
+    </qresource>
+</RCC>
