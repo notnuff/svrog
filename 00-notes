@@ -1,2 +1,2 @@
 startSystemResize - to implement window resizing
-
+setVkInstance - to set custom vulkan instance globally for Qt
