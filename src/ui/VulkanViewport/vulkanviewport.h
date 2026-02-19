@@ -3,7 +3,7 @@
 
 #include <QtQuick/QQuickItem>
 #include <QtQuick/QQuickWindow>
-#include "vulkanrenderer.h"
+#include <bridge/ivulkanrenderer.h>
 
 class VulkanViewport : public QQuickItem
 {

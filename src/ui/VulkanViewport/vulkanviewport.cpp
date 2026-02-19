@@ -1,5 +1,7 @@
 #include "vulkanviewport.h"
+
 #include <QtCore/QRunnable>
+#include <QObject>
 
 VulkanViewport::VulkanViewport()
 {

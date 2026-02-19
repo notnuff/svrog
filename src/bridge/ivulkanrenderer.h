@@ -8,10 +8,9 @@ class QQuickWindow;
 
 class IVulkanRenderer : public QObject
 {
-    Q_OBJECT
 public:
     using QObject::QObject;
-    virtual ~IVulkanRenderer() = default;
+    ~IVulkanRenderer() override = default;
 
 public slots:
     // These will be called by the viewport item on the render thread.
