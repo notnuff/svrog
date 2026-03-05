@@ -5,6 +5,7 @@ project(renderer LANGUAGES CXX)
 set(TARGET_NAME renderer)
 
 find_package(Vulkan REQUIRED)
+find_package(Qt6 REQUIRED COMPONENTS Core)
 
 option(BUILD_STANDALONE_GLFW_RENDERER "Build standalone GLFW-based Vulkan renderer" OFF)
 
@@ -41,6 +42,7 @@ add_library(${TARGET_NAME}
 
 target_link_libraries(${TARGET_NAME} PRIVATE
         Vulkan::Vulkan
+        Qt6::Core
 )
 
 target_include_directories(${TARGET_NAME}

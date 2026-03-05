@@ -20,7 +20,6 @@ public:
     VkVisualTestApp() = default;
     ~VkVisualTestApp() = default;
 
-    // Non-copyable, non-mo
     VkVisualTestApp(const VkVisualTestApp&) = delete;
     VkVisualTestApp& operator=(const VkVisualTestApp&) = delete;
     VkVisualTestApp(VkVisualTestApp&&) = delete;

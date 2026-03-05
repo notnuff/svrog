@@ -29,15 +29,15 @@ public:
     std::unique_ptr<VkCtx> initialize();
 
 private:
-    InstanceBuilder instanceBuilder_;
-    SurfaceBuilder surfaceBuilder_;
-    DeviceBuilder deviceBuilder_;
-    SwapchainBuilder swapchainBuilder_;
-    RenderPassBuilder renderPassBuilder_;
-    PipelineBuilder pipelineBuilder_;
-    FramebufferBuilder framebufferBuilder_;
-    CommandBuilder commandBuilder_;
-    SyncBuilder syncBuilder_;
+    InstanceBuilder m_instanceBuilder;
+    SurfaceBuilder m_surfaceBuilder;
+    DeviceBuilder m_deviceBuilder;
+    SwapchainBuilder m_swapchainBuilder;
+    RenderPassBuilder m_renderPassBuilder;
+    PipelineBuilder m_pipelineBuilder;
+    FramebufferBuilder m_framebufferBuilder;
+    CommandBuilder m_commandBuilder;
+    SyncBuilder m_syncBuilder;
 };
 
 } // namespace nuff::renderer

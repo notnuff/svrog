@@ -27,11 +27,11 @@ public:
     void build(VkCtx& ctx) override;
 
 private:
-    std::string appName_ = "VkApp";
-    std::string engineName_ = "svrog";
-    std::vector<const char*> extensions_;
-    std::vector<const char*> validationLayers_;
-    bool enableValidation_ = false;
+    std::string m_appName = "VkApp";
+    std::string m_engineName = "svrog";
+    std::vector<const char*> m_extensions;
+    std::vector<const char*> m_validationLayers;
+    bool m_enableValidation = false;
 };
 
 // SurfaceBuilder - Creates Vulkan surface (requires platform-specific callback)
@@ -44,7 +44,7 @@ public:
     void build(VkCtx& ctx) override;
 
 private:
-    SurfaceCreatorFn surfaceCreator_;
+    SurfaceCreatorFn m_surfaceCreator;
 };
 
 // DeviceBuilder - Selects physical device and creates logical device
@@ -57,9 +57,9 @@ public:
     void build(VkCtx& ctx) override;
 
 private:
-    bool requireGraphics_ = true;
-    bool requirePresent_ = true;
-    std::vector<const char*> deviceExtensions_ = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
+    bool m_requireGraphics = true;
+    bool m_requirePresent = true;
+    std::vector<const char*> m_deviceExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
 
     static QueueFamilyIndices findQueueFamilies(::vk::PhysicalDevice device, ::vk::SurfaceKHR surface);
     static bool isDeviceSuitable(::vk::PhysicalDevice device, ::vk::SurfaceKHR surface,
@@ -78,10 +78,10 @@ public:
     void build(VkCtx& ctx) override;
 
 private:
-    ::vk::Format preferredFormat_ = ::vk::Format::eB8G8R8A8Srgb;
-    ::vk::PresentModeKHR preferredPresentMode_ = ::vk::PresentModeKHR::eMailbox;
-    uint32_t width_ = 800;
-    uint32_t height_ = 600;
+    ::vk::Format m_preferredFormat = ::vk::Format::eB8G8R8A8Srgb;
+    ::vk::PresentModeKHR m_preferredPresentMode = ::vk::PresentModeKHR::eMailbox;
+    uint32_t m_width = 800;
+    uint32_t m_height = 600;
 
     static SwapchainSupportDetails querySwapchainSupport(::vk::PhysicalDevice device, ::vk::SurfaceKHR surface);
     static ::vk::SurfaceFormatKHR chooseSwapSurfaceFormat(const std::vector<::vk::SurfaceFormatKHR>& formats,
@@ -109,10 +109,10 @@ public:
     void build(VkCtx& ctx) override;
 
 private:
-    std::string vertexShaderPath_;
-    std::string fragmentShaderPath_;
-    std::vector<uint32_t> vertexShaderCode_;
-    std::vector<uint32_t> fragmentShaderCode_;
+    std::string m_vertexShaderPath;
+    std::string m_fragmentShaderPath;
+    std::vector<uint32_t> m_vertexShaderCode;
+    std::vector<uint32_t> m_fragmentShaderCode;
 
     static std::vector<uint32_t> readShaderFile(const std::string& path);
     static ::vk::ShaderModule createShaderModule(::vk::Device device, const std::vector<uint32_t>& code);

@@ -1,47 +1,52 @@
 #include "vk_ctx/vk_builder.h"
 
+#include <QLoggingCategory>
+
 #include <algorithm>
 #include <fstream>
-#include <iostream>
 #include <set>
 #include <stdexcept>
 #include <limits>
 
+namespace L {
+Q_LOGGING_CATEGORY(vkBuilder, "nuff.renderer.vk.builder")
+}
+
 namespace nuff::renderer {
 
 InstanceBuilder& InstanceBuilder::setAppName(const std::string& name) {
-    appName_ = name;
+    m_appName = name;
     return *this;
 }
 
 InstanceBuilder& InstanceBuilder::setEngineName(const std::string& name) {
-    engineName_ = name;
+    m_engineName = name;
     return *this;
 }
 
 InstanceBuilder& InstanceBuilder::addExtensions(const std::vector<const char*>& extensions) {
-    extensions_.insert(extensions_.end(), extensions.begin(), extensions.end());
+    m_extensions.insert(m_extensions.end(), extensions.begin(), extensions.end());
     return *this;
 }
 
 InstanceBuilder& InstanceBuilder::addValidationLayers(const std::vector<const char*>& layers) {
-    validationLayers_.insert(validationLayers_.end(), layers.begin(), layers.end());
+    m_validationLayers.insert(m_validationLayers.end(), layers.begin(), layers.end());
     return *this;
 }
 
 InstanceBuilder& InstanceBuilder::enableValidation(bool enable) {
-    enableValidation_ = enable;
-    if (enable && validationLayers_.empty()) {
-        validationLayers_.push_back("VK_LAYER_KHRONOS_validation");
+    m_enableValidation = enable;
+    if (enable && m_validationLayers.empty()) {
+        m_validationLayers.push_back("VK_LAYER_KHRONOS_validation");
     }
     return *this;
 }
 
 void InstanceBuilder::build(VkCtx& ctx) {
     vk::ApplicationInfo appInfo{
-        appName_.c_str(),
+        m_appName.c_str(),
         VK_MAKE_VERSION(1, 0, 0),
-        engineName_.c_str(),
+        m_engineName.c_str(),
         VK_MAKE_VERSION(1, 0, 0),
         VK_API_VERSION_1_3
     };
@@ -49,42 +54,42 @@ void InstanceBuilder::build(VkCtx& ctx) {
     vk::InstanceCreateInfo createInfo{
         {},
         &appInfo,
-        enableValidation_ ? static_cast<uint32_t>(validationLayers_.size()) : 0,
-        enableValidation_ ? validationLayers_.data() : nullptr,
-        static_cast<uint32_t>(extensions_.size()),
-        extensions_.data()
+        m_enableValidation ? static_cast<uint32_t>(m_validationLayers.size()) : 0,
+        m_enableValidation ? m_validationLayers.data() : nullptr,
+        static_cast<uint32_t>(m_extensions.size()),
+        m_extensions.data()
     };
 
     ctx.instance = vk::createInstance(createInfo);
-    std::cout << "[InstanceBuilder] Vulkan instance created\n";
+    qCInfo(L::vkBuilder) << "Vulkan instance created";
 }
 
 SurfaceBuilder& SurfaceBuilder::setSurfaceCreator(SurfaceCreatorFn creator) {
-    surfaceCreator_ = std::move(creator);
+    m_surfaceCreator = std::move(creator);
     return *this;
 }
 
 void SurfaceBuilder::build(VkCtx& ctx) {
-    if (!surfaceCreator_) {
+    if (!m_surfaceCreator) {
         throw std::runtime_error("SurfaceBuilder: No surface creator function set");
     }
-    VkSurfaceKHR rawSurface = surfaceCreator_(static_cast<VkInstance>(ctx.instance));
+    VkSurfaceKHR rawSurface = m_surfaceCreator(static_cast<VkInstance>(ctx.instance));
     ctx.surface = vk::SurfaceKHR(rawSurface);
-    std::cout << "[SurfaceBuilder] Surface created\n";
+    qCInfo(L::vkBuilder) << "Surface created";
 }
 
 DeviceBuilder& DeviceBuilder::requireGraphicsQueue(bool require) {
-    requireGraphics_ = require;
+    m_requireGraphics = require;
     return *this;
 }
 
 DeviceBuilder& DeviceBuilder::requirePresentQueue(bool require) {
-    requirePresent_ = require;
+    m_requirePresent = require;
     return *this;
 }
 
 DeviceBuilder& DeviceBuilder::addDeviceExtensions(const std::vector<const char*>& extensions) {
-    deviceExtensions_.insert(deviceExtensions_.end(), extensions.begin(), extensions.end());
+    m_deviceExtensions.insert(m_deviceExtensions.end(), extensions.begin(), extensions.end());
     return *this;
 }
 
@@ -143,7 +148,7 @@ void DeviceBuilder::build(VkCtx& ctx) {
     }
 
     for (const auto& device : physicalDevices) {
-        if (isDeviceSuitable(device, ctx.surface, deviceExtensions_)) {
+        if (isDeviceSuitable(device, ctx.surface, m_deviceExtensions)) {
             ctx.physicalDevice = device;
             break;
         }
@@ -154,7 +159,7 @@ void DeviceBuilder::build(VkCtx& ctx) {
     }
 
     auto props = ctx.physicalDevice.getProperties();
-    std::cout << "[DeviceBuilder] Selected GPU: " << props.deviceName << "\n";
+    qCInfo(L::vkBuilder) << "Selected GPU:" << props.deviceName.data();
 
     ctx.queueFamilyIndices = findQueueFamilies(ctx.physicalDevice, ctx.surface);
 
@@ -177,8 +182,8 @@ void DeviceBuilder::build(VkCtx& ctx) {
         static_cast<uint32_t>(queueCreateInfos.size()),
         queueCreateInfos.data(),
         0, nullptr,
-        static_cast<uint32_t>(deviceExtensions_.size()),
-        deviceExtensions_.data(),
+        static_cast<uint32_t>(m_deviceExtensions.size()),
+        m_deviceExtensions.data(),
         &deviceFeatures
     };
 
@@ -186,22 +191,22 @@ void DeviceBuilder::build(VkCtx& ctx) {
     ctx.graphicsQueue = ctx.device.getQueue(ctx.queueFamilyIndices.graphicsFamily.value(), 0);
     ctx.presentQueue = ctx.device.getQueue(ctx.queueFamilyIndices.presentFamily.value(), 0);
 
-    std::cout << "[DeviceBuilder] Logical device created\n";
+    qCInfo(L::vkBuilder) << "Logical device created";
 }
 
 SwapchainBuilder& SwapchainBuilder::setPreferredFormat(vk::Format format) {
-    preferredFormat_ = format;
+    m_preferredFormat = format;
     return *this;
 }
 
 SwapchainBuilder& SwapchainBuilder::setPreferredPresentMode(vk::PresentModeKHR mode) {
-    preferredPresentMode_ = mode;
+    m_preferredPresentMode = mode;
     return *this;
 }
 
 SwapchainBuilder& SwapchainBuilder::setExtent(uint32_t width, uint32_t height) {
-    width_ = width;
-    height_ = height;
+    m_width = width;
+    m_height = height;
     return *this;
 }
 
@@ -247,9 +252,9 @@ vk::Extent2D SwapchainBuilder::chooseSwapExtent(
 void SwapchainBuilder::build(VkCtx& ctx) {
     auto swapchainSupport = querySwapchainSupport(ctx.physicalDevice, ctx.surface);
 
-    auto surfaceFormat = chooseSwapSurfaceFormat(swapchainSupport.formats, preferredFormat_);
-    auto presentMode = chooseSwapPresentMode(swapchainSupport.presentModes, preferredPresentMode_);
-    auto extent = chooseSwapExtent(swapchainSupport.capabilities, width_, height_);
+    auto surfaceFormat = chooseSwapSurfaceFormat(swapchainSupport.formats, m_preferredFormat);
+    auto presentMode = chooseSwapPresentMode(swapchainSupport.presentModes, m_preferredPresentMode);
+    auto extent = chooseSwapExtent(swapchainSupport.capabilities, m_width, m_height);
 
     uint32_t imageCount = swapchainSupport.capabilities.minImageCount + 1;
     if (swapchainSupport.capabilities.maxImageCount > 0 &&
@@ -304,7 +309,7 @@ void SwapchainBuilder::build(VkCtx& ctx) {
         ctx.swapchainImageViews[i] = ctx.device.createImageView(viewInfo);
     }
 
-    std::cout << "[SwapchainBuilder] Swapchain created (" << extent.width << "x" << extent.height << ")\n";
+    qCInfo(L::vkBuilder) << "Swapchain created (" << extent.width << "x" << extent.height << ")";
 }
 
 void RenderPassBuilder::build(VkCtx& ctx) {
@@ -345,26 +350,26 @@ void RenderPassBuilder::build(VkCtx& ctx) {
     };
 
     ctx.renderPass = ctx.device.createRenderPass(renderPassInfo);
-    std::cout << "[RenderPassBuilder] Render pass created\n";
+    qCInfo(L::vkBuilder) << "Render pass created";
 }
 
 PipelineBuilder& PipelineBuilder::setVertexShaderPath(const std::string& path) {
-    vertexShaderPath_ = path;
+    m_vertexShaderPath = path;
     return *this;
 }
 
 PipelineBuilder& PipelineBuilder::setFragmentShaderPath(const std::string& path) {
-    fragmentShaderPath_ = path;
+    m_fragmentShaderPath = path;
     return *this;
 }
 
 PipelineBuilder& PipelineBuilder::setVertexShaderCode(const std::vector<uint32_t>& code) {
-    vertexShaderCode_ = code;
+    m_vertexShaderCode = code;
     return *this;
 }
 
 PipelineBuilder& PipelineBuilder::setFragmentShaderCode(const std::vector<uint32_t>& code) {
-    fragmentShaderCode_ = code;
+    m_fragmentShaderCode = code;
     return *this;
 }
 
@@ -391,10 +396,10 @@ vk::ShaderModule PipelineBuilder::createShaderModule(vk::Device device, const st
 
 
 void PipelineBuilder::build(VkCtx& ctx) {
-    std::vector<uint32_t> vertCode = vertexShaderCode_.empty()
-        ? readShaderFile(vertexShaderPath_) : vertexShaderCode_;
-    std::vector<uint32_t> fragCode = fragmentShaderCode_.empty()
-        ? readShaderFile(fragmentShaderPath_) : fragmentShaderCode_;
+    std::vector<uint32_t> vertCode = m_vertexShaderCode.empty()
+        ? readShaderFile(m_vertexShaderPath) : m_vertexShaderCode;
+    std::vector<uint32_t> fragCode = m_fragmentShaderCode.empty()
+        ? readShaderFile(m_fragmentShaderPath) : m_fragmentShaderCode;
 
     vk::ShaderModule vertShaderModule = createShaderModule(ctx.device, vertCode);
     vk::ShaderModule fragShaderModule = createShaderModule(ctx.device, fragCode);
@@ -475,7 +480,7 @@ void PipelineBuilder::build(VkCtx& ctx) {
     ctx.device.destroyShaderModule(fragShaderModule);
     ctx.device.destroyShaderModule(vertShaderModule);
 
-    std::cout << "[PipelineBuilder] Graphics pipeline created\n";
+    qCInfo(L::vkBuilder) << "Graphics pipeline created";
 }
 
 void FramebufferBuilder::build(VkCtx& ctx) {
@@ -496,7 +501,7 @@ void FramebufferBuilder::build(VkCtx& ctx) {
         ctx.framebuffers[i] = ctx.device.createFramebuffer(framebufferInfo);
     }
 
-    std::cout << "[FramebufferBuilder] " << ctx.framebuffers.size() << " framebuffers created\n";
+    qCInfo(L::vkBuilder) << ctx.framebuffers.size() << "framebuffers created";
 }
 
 void CommandBuilder::build(VkCtx& ctx) {
@@ -516,7 +521,7 @@ void CommandBuilder::build(VkCtx& ctx) {
 
     ctx.commandBuffers = ctx.device.allocateCommandBuffers(allocInfo);
 
-    std::cout << "[CommandBuilder] Command pool and " << ctx.commandBuffers.size() << " command buffers created\n";
+    qCInfo(L::vkBuilder) << "Command pool and" << ctx.commandBuffers.size() << "command buffers created";
 }
 
 void SyncBuilder::build(VkCtx& ctx) {
@@ -533,7 +538,7 @@ void SyncBuilder::build(VkCtx& ctx) {
         ctx.inFlightFences[i] = ctx.device.createFence(fenceInfo);
     }
 
-    std::cout << "[SyncBuilder] Sync objects created\n";
+    qCInfo(L::vkBuilder) << "Sync objects created";
 }
 
 } // namespace nuff::renderer

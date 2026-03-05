@@ -1,8 +1,13 @@
 #include "visual_debug/vk_visual_app.h"
 
+#include <QLoggingCategory>
+
 #include <cstdlib>
-#include <iostream>
 #include <stdexcept>
+
+namespace L {
+Q_LOGGING_CATEGORY(vkVisualMain, "nuff.renderer.vk.visual_main")
+}
 
 int main() {
     nuff::renderer::VkVisualTestApp app;
@@ -10,7 +15,7 @@ int main() {
     try {
         app.run();
     } catch (const std::exception& e) {
-        std::cerr << "Error: " << e.what() << std::endl;
+        qCCritical(L::vkVisualMain) << "Error:" << e.what();
         return EXIT_FAILURE;
     }
 

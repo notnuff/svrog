@@ -2,9 +2,14 @@
 #include "vk_ctx/vk_initializer.h"
 #include "shaders/triangle_shaders.h"
 
-#include <iostream>
+#include <QLoggingCategory>
+
 #include <stdexcept>
 #include <vector>
+
+namespace L {
+Q_LOGGING_CATEGORY(vkVisualApp, "nuff.renderer.vk.visual_app")
+}
 
 namespace nuff::renderer {
 
@@ -124,7 +129,7 @@ void VkVisualTestApp::drawFrame() {
 }
 
 void VkVisualTestApp::mainLoop() {
-    std::cout << "Entering main loop. Close window to exit.\n";
+    qCInfo(L::vkVisualApp) << "Entering main loop. Close window to exit.";
     while (!glfwWindowShouldClose(window_)) {
         glfwPollEvents();
         drawFrame();
@@ -138,7 +143,7 @@ void VkVisualTestApp::cleanup() {
 
     glfwDestroyWindow(window_);
     glfwTerminate();
-    std::cout << "Cleanup complete\n";
+    qCInfo(L::vkVisualApp) << "Cleanup complete";
 }
 
 } // namespace nuff::renderer
