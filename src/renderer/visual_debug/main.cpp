@@ -1,11 +1,11 @@
-#include "vk_visual_app.h"
+#include "visual_debug/vk_visual_app.h"
 
 #include <cstdlib>
 #include <iostream>
 #include <stdexcept>
 
 int main() {
-    svrog::renderer::VkVisualTestApp app;
+    nuff::VkVisualTestApp app;
 
     try {
         app.run();

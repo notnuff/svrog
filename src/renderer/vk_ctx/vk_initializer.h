@@ -1,13 +1,13 @@
 #pragma once
 
-#include "vk_builder.h"
-#include "vk_ctx.h"
+#include "vk_ctx/vk_builder.h"
+#include "vk_ctx/vk_ctx.h"
 
 #include <functional>
 #include <memory>
 #include <vector>
 
-namespace svrog::renderer {
+namespace nuff::renderer {
 
 class VkInitializer {
 public:
@@ -40,5 +40,5 @@ private:
     SyncBuilder syncBuilder_;
 };
 
-} // namespace svrog::renderer
+} // namespace nuff::renderer
 

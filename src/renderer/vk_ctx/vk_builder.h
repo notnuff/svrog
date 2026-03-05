@@ -1,12 +1,12 @@
 #pragma once
 
-#include "vk_ctx.h"
+#include "vk_ctx/vk_ctx.h"
 
 #include <functional>
 #include <string>
 #include <vector>
 
-namespace svrog::renderer {
+namespace nuff::renderer {
 
 /**
  * Base builder interface for Vulkan components.
@@ -156,5 +156,5 @@ public:
     void build(VkCtx& ctx) override;
 };
 
-} // namespace svrog::renderer
+} // namespace nuff::renderer
 

@@ -1,12 +1,12 @@
-#include "vk_visual_app.h"
-#include "vk_initializer.h"
+#include "visual_debug/vk_visual_app.h"
+#include "vk_ctx/vk_initializer.h"
 #include "shaders/triangle_shaders.h"
 
 #include <iostream>
 #include <stdexcept>
 #include <vector>
 
-namespace svrog::renderer {
+namespace nuff::renderer {
 
 void VkVisualTestApp::run() {
     initWindow();
@@ -141,5 +141,5 @@ void VkVisualTestApp::cleanup() {
     std::cout << "Cleanup complete\n";
 }
 
-} // namespace svrog::renderer
+} // namespace nuff::renderer
 

@@ -1,8 +1,8 @@
-#include "vk_initializer.h"
+#include "vk_ctx/vk_initializer.h"
 
 #include <iostream>
 
-namespace svrog::renderer {
+namespace nuff::renderer {
 
 VkInitializer::VkInitializer() = default;
 
@@ -76,5 +76,5 @@ std::unique_ptr<VkCtx> VkInitializer::initialize() {
     return ctx;
 }
 
-} // namespace svrog::renderer
+} // namespace nuff::renderer
 

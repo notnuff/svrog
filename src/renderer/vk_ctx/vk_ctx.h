@@ -5,7 +5,7 @@
 #include <optional>
 #include <vector>
 
-namespace svrog::renderer {
+namespace nuff::renderer {
 
 struct QueueFamilyIndices {
     std::optional<uint32_t> graphicsFamily;
@@ -57,5 +57,5 @@ struct VkCtx {
     void cleanup();
 };
 
-} // namespace svrog::renderer
+} // namespace nuff::renderer
 

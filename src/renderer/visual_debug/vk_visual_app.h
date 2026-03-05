@@ -5,11 +5,11 @@
 #endif
 #include <GLFW/glfw3.h>
 
-#include "vk_ctx.h"
+#include "vk_ctx/vk_ctx.h"
 
 #include <memory>
 
-namespace svrog::renderer {
+namespace nuff::renderer {
 
 /**
  * VkVisualTestApp - Standalone Vulkan test application using GLFW.
@@ -51,5 +51,5 @@ private:
     void drawFrame();
 };
 
-} // namespace svrog::renderer
+} // namespace nuff::renderer
 

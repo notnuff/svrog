@@ -1,4 +1,4 @@
-#include "vk_builder.h"
+#include "vk_ctx/vk_builder.h"
 
 #include <algorithm>
 #include <fstream>
@@ -6,7 +6,7 @@
 #include <set>
 #include <stdexcept>
 
-namespace svrog::renderer {
+namespace nuff::renderer {
 
 InstanceBuilder& InstanceBuilder::setAppName(const std::string& name) {
     appName_ = name;
@@ -543,4 +543,4 @@ void SyncBuilder::build(VkCtx& ctx) {
     std::cout << "[SyncBuilder] Sync objects created\n";
 }
 
-} // namespace svrog::renderer
+} // namespace nuff::renderer

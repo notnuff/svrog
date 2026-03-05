@@ -1,6 +1,6 @@
-#include "vk_ctx.h"
+#include "vk_ctx/vk_ctx.h"
 
-namespace svrog::renderer {
+namespace nuff::renderer {
 
 void VkCtx::cleanup() {
     if (device) {
@@ -57,5 +57,5 @@ void VkCtx::cleanup() {
     }
 }
 
-} // namespace svrog::renderer
+} // namespace nuff::renderer
 

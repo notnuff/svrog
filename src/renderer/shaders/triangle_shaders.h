@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <vector>
 
-namespace svrog::renderer::shaders {
+namespace nuff::renderer::shaders {
 
 inline const std::vector<uint32_t> triangleVertexShader = {
     0x07230203, 0x00010000, 0x0008000b, 0x00000036, 0x00000000, 0x00020011,
@@ -92,5 +92,5 @@ inline const std::vector<uint32_t> triangleFragmentShader = {
     0x0003003e, 0x00000009, 0x00000012, 0x000100fd, 0x00010038
 };
 
-} // namespace svrog::renderer::shaders
+} // namespace nuff::renderer::shaders
 
