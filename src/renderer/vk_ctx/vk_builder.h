@@ -8,18 +8,14 @@
 
 namespace nuff::renderer {
 
-/**
- * Base builder interface for Vulkan components.
- */
+// Base builder interface for Vulkan components.
 class IVkBuilder {
 public:
     virtual ~IVkBuilder() = default;
     virtual void build(VkCtx& ctx) = 0;
 };
 
-/**
- * InstanceBuilder - Creates Vulkan instance
- */
+// InstanceBuilder - Creates Vulkan instance
 class InstanceBuilder : public IVkBuilder {
 public:
     InstanceBuilder& setAppName(const std::string& name);
@@ -38,9 +34,7 @@ private:
     bool enableValidation_ = false;
 };
 
-/**
- * SurfaceBuilder - Creates Vulkan surface (requires platform-specific callback)
- */
+// SurfaceBuilder - Creates Vulkan surface (requires platform-specific callback)
 class SurfaceBuilder : public IVkBuilder {
 public:
     using SurfaceCreatorFn = std::function<VkSurfaceKHR(VkInstance)>;
@@ -53,9 +47,7 @@ private:
     SurfaceCreatorFn surfaceCreator_;
 };
 
-/**
- * DeviceBuilder - Selects physical device and creates logical device
- */
+// DeviceBuilder - Selects physical device and creates logical device
 class DeviceBuilder : public IVkBuilder {
 public:
     DeviceBuilder& requireGraphicsQueue(bool require = true);
@@ -76,9 +68,7 @@ private:
                                              const std::vector<const char*>& extensions);
 };
 
-/**
- * SwapchainBuilder - Creates swapchain and image views
- */
+// SwapchainBuilder - Creates swapchain and image views
 class SwapchainBuilder : public IVkBuilder {
 public:
     SwapchainBuilder& setPreferredFormat(::vk::Format format);
@@ -102,17 +92,13 @@ private:
                                           uint32_t width, uint32_t height);
 };
 
-/**
- * RenderPassBuilder - Creates render pass for triangle rendering
- */
+// RenderPassBuilder - Creates render pass for triangle rendering
 class RenderPassBuilder : public IVkBuilder {
 public:
     void build(VkCtx& ctx) override;
 };
 
-/**
- * PipelineBuilder - Creates graphics pipeline
- */
+// PipelineBuilder - Creates graphics pipeline
 class PipelineBuilder : public IVkBuilder {
 public:
     PipelineBuilder& setVertexShaderPath(const std::string& path);
@@ -132,25 +118,19 @@ private:
     static ::vk::ShaderModule createShaderModule(::vk::Device device, const std::vector<uint32_t>& code);
 };
 
-/**
- * FramebufferBuilder - Creates framebuffers for each swapchain image
- */
+// FramebufferBuilder - Creates framebuffers for each swapchain image
 class FramebufferBuilder : public IVkBuilder {
 public:
     void build(VkCtx& ctx) override;
 };
 
-/**
- * CommandBuilder - Creates command pool and command buffers
- */
+// CommandBuilder - Creates command pool and command buffers
 class CommandBuilder : public IVkBuilder {
 public:
     void build(VkCtx& ctx) override;
 };
 
-/**
- * SyncBuilder - Creates semaphores and fences
- */
+// SyncBuilder - Creates semaphores and fences
 class SyncBuilder : public IVkBuilder {
 public:
     void build(VkCtx& ctx) override;
