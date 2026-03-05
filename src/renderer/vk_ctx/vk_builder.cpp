@@ -5,6 +5,7 @@
 #include <iostream>
 #include <set>
 #include <stdexcept>
+#include <limits>
 
 namespace nuff::renderer {
 
@@ -498,10 +499,6 @@ void FramebufferBuilder::build(VkCtx& ctx) {
     std::cout << "[FramebufferBuilder] " << ctx.framebuffers.size() << " framebuffers created\n";
 }
 
-// ============================================================================
-// CommandBuilder
-// ============================================================================
-
 void CommandBuilder::build(VkCtx& ctx) {
     vk::CommandPoolCreateInfo poolInfo{
         vk::CommandPoolCreateFlagBits::eResetCommandBuffer,
@@ -521,10 +518,6 @@ void CommandBuilder::build(VkCtx& ctx) {
 
     std::cout << "[CommandBuilder] Command pool and " << ctx.commandBuffers.size() << " command buffers created\n";
 }
-
-// ============================================================================
-// SyncBuilder
-// ============================================================================
 
 void SyncBuilder::build(VkCtx& ctx) {
     ctx.imageAvailableSemaphores.resize(VkCtx::MAX_FRAMES_IN_FLIGHT);

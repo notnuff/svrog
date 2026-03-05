@@ -11,27 +11,22 @@
 
 namespace nuff::renderer {
 
-/**
- * VkVisualTestApp - Standalone Vulkan test application using GLFW.
- * 
- * Provides a simple environment for testing Vulkan rendering
- * without Qt dependencies.
- */
+// VkVisualTestApp - Standalone Vulkan test application using GLFW.
+// Provides a simple environment for testing Vulkan rendering
+// without Qt's Window dependencies.
+
 class VkVisualTestApp {
 public:
     VkVisualTestApp() = default;
     ~VkVisualTestApp() = default;
 
-    // Non-copyable, non-movable
+    // Non-copyable, non-mo
     VkVisualTestApp(const VkVisualTestApp&) = delete;
     VkVisualTestApp& operator=(const VkVisualTestApp&) = delete;
     VkVisualTestApp(VkVisualTestApp&&) = delete;
     VkVisualTestApp& operator=(VkVisualTestApp&&) = delete;
 
-    /**
-     * Run the application main loop.
-     * Initializes window, Vulkan, runs render loop, then cleans up.
-     */
+
     void run();
 
 private:

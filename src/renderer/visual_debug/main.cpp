@@ -5,7 +5,7 @@
 #include <stdexcept>
 
 int main() {
-    nuff::VkVisualTestApp app;
+    nuff::renderer::VkVisualTestApp app;
 
     try {
         app.run();
