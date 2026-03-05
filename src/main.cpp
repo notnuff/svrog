@@ -1,4 +1,5 @@
 #include <QGuiApplication>
+#include <QVulkanInstance>
 #include <QtQuick/QQuickView>
 #include <QQmlApplicationEngine>
 #include <qqmlcontext.h>
@@ -19,11 +20,8 @@ int main(int argc, char **argv)
     QObject::connect(&engine, &QQmlApplicationEngine::objectCreationFailed,
         &app, []() { QCoreApplication::exit(-1); },
         Qt::QueuedConnection);
-
+    QVulkanInstance instance;
     engine.rootContext()->setContextProperty("demoRenderer", demo.get());
-    qDebug() << "Import paths:";
-    for (const auto &path : engine.importPathList())
-        qDebug() << "  " << path;
 
     engine.addImportPath("./ui");
     engine.loadFromModule("MainWindow", "Main");
