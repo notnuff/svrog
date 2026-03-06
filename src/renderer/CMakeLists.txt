@@ -13,8 +13,8 @@ function(collect_sources_recursive DIR SOURCES_VAR HEADERS_VAR)
     file(GLOB LOCAL_SOURCES "${DIR}/*.cpp")
     file(GLOB LOCAL_HEADERS "${DIR}/*.h")
 
-    set(${SOURCES_VAR} ${${SOURCES_VAR}} ${LOCAL_SOURCES} PARENT_SCOPE)
-    set(${HEADERS_VAR} ${${HEADERS_VAR}} ${LOCAL_HEADERS} PARENT_SCOPE)
+    list(APPEND ${SOURCES_VAR} ${LOCAL_SOURCES})
+    list(APPEND ${HEADERS_VAR} ${LOCAL_HEADERS})
 
     file(GLOB SUBDIRS RELATIVE ${DIR} ${DIR}/*)
 
@@ -22,18 +22,22 @@ function(collect_sources_recursive DIR SOURCES_VAR HEADERS_VAR)
         set(FULL_SUBDIR "${DIR}/${SUBDIR}")
 
         if(IS_DIRECTORY ${FULL_SUBDIR})
+            # Skip directories with CMakeLists.txt,
+            # as their sources must be handled by respective CMakeLists.txt
             if(NOT EXISTS "${FULL_SUBDIR}/CMakeLists.txt")
                 collect_sources_recursive(${FULL_SUBDIR} ${SOURCES_VAR} ${HEADERS_VAR})
-                set(${SOURCES_VAR} ${${SOURCES_VAR}} PARENT_SCOPE)
-                set(${HEADERS_VAR} ${${HEADERS_VAR}} PARENT_SCOPE)
             endif()
         endif()
     endforeach()
+
+    set(${SOURCES_VAR} ${${SOURCES_VAR}} PARENT_SCOPE)
+    set(${HEADERS_VAR} ${${HEADERS_VAR}} PARENT_SCOPE)
 endfunction()
 
 set(SOURCES "")
 set(HEADERS "")
-collect_sources_recursive(${CMAKE_CURRENT_SOURCE_DIR} SOURCES HEADERS)
+collect_sources_recursive(${CMAKE_CURRENT_SOURCE_DIR}/vk_ctx SOURCES HEADERS)
+collect_sources_recursive(${CMAKE_CURRENT_SOURCE_DIR}/shaders SOURCES HEADERS)
 
 add_library(${TARGET_NAME}
         ${SOURCES}
