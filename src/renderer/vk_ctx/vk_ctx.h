@@ -28,7 +28,7 @@ struct VkCtx {
 
     ::vk::raii::Instance instance{nullptr};
     ::vk::raii::SurfaceKHR surface{nullptr};
-    ::vk::PhysicalDevice physicalDevice;  // Non-owning handle, no RAII wrapper
+    ::vk::raii::PhysicalDevice physicalDevice{nullptr};
     ::vk::raii::Device device{nullptr};
 
 #ifndef NDEBUG

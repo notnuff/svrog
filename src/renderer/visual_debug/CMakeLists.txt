@@ -27,7 +27,6 @@ add_executable(${TARGET_NAME}
 )
 
 target_link_libraries(${TARGET_NAME} PRIVATE
-        Vulkan::Vulkan
         glfw
         renderer
 )

@@ -76,12 +76,12 @@ void DeviceBuilder::build(VkCtx& ctx) {
 
     for (const auto& device : physicalDevices) {
         if (isDeviceSuitable(*device, *ctx.surface, m_deviceExtensions)) {
-            ctx.physicalDevice = *device;
+            ctx.physicalDevice = vk::raii::PhysicalDevice(device);
             break;
         }
     }
 
-    if (!ctx.physicalDevice) {
+    if (!*ctx.physicalDevice) {
         throw std::runtime_error("Failed to find a suitable GPU");
     }
 

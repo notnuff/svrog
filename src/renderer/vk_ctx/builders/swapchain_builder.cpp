@@ -107,7 +107,6 @@ void SwapchainBuilder::build(VkCtx& ctx) {
     ctx.swapchainImageFormat = surfaceFormat.format;
     ctx.swapchainExtent = extent;
 
-    ctx.swapchainImageViews.resize(ctx.swapchainImages.size());
     for (size_t i = 0; i < ctx.swapchainImages.size(); i++) {
         vk::ImageViewCreateInfo viewInfo{
             {},

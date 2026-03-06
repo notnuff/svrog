@@ -44,7 +44,7 @@ add_library(${TARGET_NAME}
         ${HEADERS}
 )
 
-target_link_libraries(${TARGET_NAME} PRIVATE
+target_link_libraries(${TARGET_NAME} PUBLIC
         Vulkan::Vulkan
         Qt6::Core
 )
