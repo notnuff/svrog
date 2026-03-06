@@ -53,6 +53,17 @@ void VkCtx::cleanup() {
         instance.destroySurfaceKHR(surface);
     }
 
+    // TODO: encapsulate destruction logic to the respective builders
+#ifndef NDEBUG
+    if (debugMessenger && instance) {
+        auto func = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(
+            static_cast<VkInstance>(instance), "vkDestroyDebugUtilsMessengerEXT");
+        if (func != nullptr) {
+            func(static_cast<VkInstance>(instance), debugMessenger, nullptr);
+        }
+    }
+#endif
+
     if (instance) {
         instance.destroy();
     }

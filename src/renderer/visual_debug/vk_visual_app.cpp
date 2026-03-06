@@ -49,7 +49,6 @@ void VkVisualTestApp::initVulkan() {
         .setAppName("VkVisualMain")
         .setEngineName("svrog")
         .addInstanceExtensions(extensions)
-        .enableValidation(true)
         .setSurfaceCreator([this](VkInstance instance) {
             VkSurfaceKHR surface;
             if (glfwCreateWindowSurface(instance, window_, nullptr, &surface) != VK_SUCCESS) {

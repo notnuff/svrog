@@ -28,6 +28,10 @@ struct VkCtx {
     ::vk::PhysicalDevice physicalDevice;
     ::vk::Device device;
 
+#ifndef NDEBUG
+    VkDebugUtilsMessengerEXT debugMessenger = VK_NULL_HANDLE;
+#endif
+
     ::vk::Queue graphicsQueue;
     ::vk::Queue presentQueue;
     QueueFamilyIndices queueFamilyIndices;

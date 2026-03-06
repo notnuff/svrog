@@ -18,7 +18,6 @@ public:
     VkInitializer& setAppName(const std::string& name);
     VkInitializer& setEngineName(const std::string& name);
     VkInitializer& addInstanceExtensions(const std::vector<const char*>& extensions);
-    VkInitializer& enableValidation(bool enable = true);
     VkInitializer& setSurfaceCreator(SurfaceCreatorFn creator);
     VkInitializer& setExtent(uint32_t width, uint32_t height);
     VkInitializer& setVertexShaderPath(const std::string& path);
@@ -29,7 +28,7 @@ public:
     std::unique_ptr<VkCtx> initialize();
 
 private:
-    InstanceBuilder m_instanceBuilder;
+    std::unique_ptr<InstanceBuilder> m_instanceBuilder;
     SurfaceBuilder m_surfaceBuilder;
     DeviceBuilder m_deviceBuilder;
     SwapchainBuilder m_swapchainBuilder;

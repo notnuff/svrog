@@ -1,4 +1,9 @@
 #include "vk_ctx/vk_initializer.h"
+#include "vk_ctx/builders/instance_builder.h"
+
+#ifndef NDEBUG
+#include "vk_ctx/builders/debug_instance_builder.h"
+#endif
 
 #include <QLoggingCategory>
 
@@ -8,25 +13,28 @@ Q_LOGGING_CATEGORY(vkInitializer, "nuff.renderer.vk.initializer")
 
 namespace nuff::renderer {
 
-VkInitializer::VkInitializer() = default;
+VkInitializer::VkInitializer() {
+#ifndef NDEBUG
+    m_instanceBuilder = std::make_unique<DebugInstanceBuilder>();
+    qCInfo(L::vkInitializer) << "Using DebugInstanceBuilder (debug build)";
+#else
+    m_instanceBuilder = std::make_unique<InstanceBuilder>();
+    qCInfo(L::vkInitializer) << "Using InstanceBuilder (release build)";
+#endif
+}
 
 VkInitializer& VkInitializer::setAppName(const std::string& name) {
-    m_instanceBuilder.setAppName(name);
+    m_instanceBuilder->setAppName(name);
     return *this;
 }
 
 VkInitializer& VkInitializer::setEngineName(const std::string& name) {
-    m_instanceBuilder.setEngineName(name);
+    m_instanceBuilder->setEngineName(name);
     return *this;
 }
 
 VkInitializer& VkInitializer::addInstanceExtensions(const std::vector<const char*>& extensions) {
-    m_instanceBuilder.addExtensions(extensions);
-    return *this;
-}
-
-VkInitializer& VkInitializer::enableValidation(bool enable) {
-    m_instanceBuilder.enableValidation(enable);
+    m_instanceBuilder->addExtensions(extensions);
     return *this;
 }
 
@@ -65,7 +73,7 @@ std::unique_ptr<VkCtx> VkInitializer::initialize() {
 
     qCInfo(L::vkInitializer) << "Starting Vulkan initialization...";
 
-    m_instanceBuilder.build(*ctx);
+    m_instanceBuilder->build(*ctx);
     m_surfaceBuilder.build(*ctx);
     m_deviceBuilder.build(*ctx);
     m_swapchainBuilder.build(*ctx);
