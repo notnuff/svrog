@@ -23,7 +23,7 @@ void InstanceBuilder::build(VkCtx& ctx) {
         VK_MAKE_VERSION(1, 0, 0),
         m_engineName.c_str(),
         VK_MAKE_VERSION(1, 0, 0),
-        VK_API_VERSION_1_3
+        vk::ApiVersion14
     };
 
     vk::InstanceCreateInfo createInfo{
@@ -35,7 +35,7 @@ void InstanceBuilder::build(VkCtx& ctx) {
         m_extensions.data()
     };
 
-    ctx.instance = vk::createInstance(createInfo);
+    ctx.instance = vk::raii::Instance(ctx.context, createInfo);
     qCInfo(logger()) << "Vulkan instance created";
 }
 

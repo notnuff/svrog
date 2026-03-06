@@ -10,6 +10,7 @@ DebugInstanceBuilder::DebugInstanceBuilder() {
 void DebugInstanceBuilder::build(VkCtx& ctx) {
     qCInfo(logger()) << "Building Vulkan instance with debug features enabled";
 
+    // TODO: use inheritance to build debug instance, not copy-paste
     // Build instance with validation layers
     vk::ApplicationInfo appInfo{
         m_appName.c_str(),
@@ -28,42 +29,27 @@ void DebugInstanceBuilder::build(VkCtx& ctx) {
         m_extensions.data()
     };
 
-    ctx.instance = vk::createInstance(createInfo);
+    ctx.instance = vk::raii::Instance(ctx.context, createInfo);
     qCInfo(logger()) << "Vulkan instance created with validation layers";
 
-    // Set up debug messenger
     setupDebugMessenger(ctx);
 }
 
 void DebugInstanceBuilder::setupDebugMessenger(VkCtx& ctx) {
-    VkDebugUtilsMessengerCreateInfoEXT createInfo{};
-    createInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
-    createInfo.messageSeverity =
-        VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT |
-        VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT |
-        VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
-    createInfo.messageType =
-        VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT |
-        VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT |
-        VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
-    createInfo.pfnUserCallback = debugCallback;
-    createInfo.pUserData = this;  // Pass this pointer to access logger
+    vk::DebugUtilsMessengerCreateInfoEXT createInfo{
+        {},
+        vk::DebugUtilsMessageSeverityFlagBitsEXT::eVerbose |
+            vk::DebugUtilsMessageSeverityFlagBitsEXT::eWarning |
+            vk::DebugUtilsMessageSeverityFlagBitsEXT::eError,
+        vk::DebugUtilsMessageTypeFlagBitsEXT::eGeneral |
+            vk::DebugUtilsMessageTypeFlagBitsEXT::eValidation |
+            vk::DebugUtilsMessageTypeFlagBitsEXT::ePerformance,
+        debugCallback,
+        this  // Pass this pointer to access logger
+    };
 
-    // Load the function pointer for creating debug messenger
-    auto func = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(
-        static_cast<VkInstance>(ctx.instance), "vkCreateDebugUtilsMessengerEXT");
-
-    if (func != nullptr) {
-        VkResult result = func(static_cast<VkInstance>(ctx.instance),
-                              &createInfo, nullptr, &ctx.debugMessenger);
-        if (result == VK_SUCCESS) {
-            qCInfo(logger()) << "Debug messenger created successfully";
-        } else {
-            qCWarning(logger()) << "Failed to create debug messenger";
-        }
-    } else {
-        qCWarning(logger()) << "Debug utils extension not available";
-    }
+    ctx.debugMessenger = vk::raii::DebugUtilsMessengerEXT(ctx.instance, createInfo);
+    qCInfo(logger()) << "Debug messenger created successfully";
 }
 
 VKAPI_ATTR VkBool32 VKAPI_CALL DebugInstanceBuilder::debugCallback(
@@ -74,11 +60,9 @@ VKAPI_ATTR VkBool32 VKAPI_CALL DebugInstanceBuilder::debugCallback(
 
     (void)messageType;
 
-    // Retrieve the logger from the builder instance
     auto* builder = static_cast<DebugInstanceBuilder*>(pUserData);
     const QLoggingCategory& log = builder->logger();
 
-    // Map Vulkan severity to Qt logging levels
     if (messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT) {
         qCCritical(log) << "[Vulkan Validation]" << pCallbackData->pMessage;
     } else if (messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT) {

@@ -13,8 +13,8 @@ void SurfaceBuilder::build(VkCtx& ctx) {
     if (!m_surfaceCreator) {
         throw std::runtime_error("SurfaceBuilder: No surface creator function set");
     }
-    VkSurfaceKHR rawSurface = m_surfaceCreator(static_cast<VkInstance>(ctx.instance));
-    ctx.surface = vk::SurfaceKHR(rawSurface);
+    VkSurfaceKHR rawSurface = m_surfaceCreator(*ctx.instance);
+    ctx.surface = vk::raii::SurfaceKHR(ctx.instance, rawSurface);
     qCInfo(logger()) << "Surface created";
 }
 

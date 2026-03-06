@@ -37,12 +37,10 @@ void VkVisualTestApp::initWindow() {
 }
 
 void VkVisualTestApp::initVulkan() {
-    // Get required extensions from GLFW
     uint32_t glfwExtensionCount = 0;
     const char** glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
     std::vector<const char*> extensions(glfwExtensions, glfwExtensions + glfwExtensionCount);
 
-    // Use VkInitializer to set up everything
     VkInitializer initializer;
 
     ctx_ = initializer
@@ -62,21 +60,21 @@ void VkVisualTestApp::initVulkan() {
         .initialize();
 }
 
-void VkVisualTestApp::recordCommandBuffer(::vk::CommandBuffer commandBuffer, uint32_t imageIndex) {
+void VkVisualTestApp::recordCommandBuffer(const ::vk::raii::CommandBuffer& commandBuffer, uint32_t imageIndex) {
     ::vk::CommandBufferBeginInfo beginInfo{};
     commandBuffer.begin(beginInfo);
 
     ::vk::ClearValue clearColor{::vk::ClearColorValue{std::array<float, 4>{0.0f, 0.0f, 0.0f, 1.0f}}};
 
     ::vk::RenderPassBeginInfo renderPassInfo{
-        ctx_->renderPass,
-        ctx_->framebuffers[imageIndex],
+        *ctx_->renderPass,
+        *ctx_->framebuffers[imageIndex],
         {{0, 0}, ctx_->swapchainExtent},
         1, &clearColor
     };
 
     commandBuffer.beginRenderPass(renderPassInfo, ::vk::SubpassContents::eInline);
-    commandBuffer.bindPipeline(::vk::PipelineBindPoint::eGraphics, ctx_->graphicsPipeline);
+    commandBuffer.bindPipeline(::vk::PipelineBindPoint::eGraphics, *ctx_->graphicsPipeline);
     commandBuffer.draw(3, 1, 0, 0);  // Draw triangle (3 vertices)
     commandBuffer.endRenderPass();
     commandBuffer.end();
@@ -85,39 +83,41 @@ void VkVisualTestApp::recordCommandBuffer(::vk::CommandBuffer commandBuffer, uin
 void VkVisualTestApp::drawFrame() {
     // Wait for previous frame
     auto waitResult = ctx_->device.waitForFences(
-        ctx_->inFlightFences[currentFrame_], VK_TRUE, UINT64_MAX);
+        {*ctx_->inFlightFences[currentFrame_]}, VK_TRUE, UINT64_MAX);
     (void)waitResult;
 
     // Acquire next image
-    auto [acquireResult, imageIndex] = ctx_->device.acquireNextImageKHR(
-        ctx_->swapchain, UINT64_MAX, ctx_->imageAvailableSemaphores[currentFrame_], nullptr);
+    auto [acquireResult, imageIndex] = ctx_->swapchain.acquireNextImage(
+        UINT64_MAX, *ctx_->imageAvailableSemaphores[currentFrame_], nullptr);
 
     if (acquireResult != ::vk::Result::eSuccess && acquireResult != ::vk::Result::eSuboptimalKHR) {
         throw std::runtime_error("Failed to acquire swapchain image");
     }
 
-    ctx_->device.resetFences(ctx_->inFlightFences[currentFrame_]);
+    ctx_->device.resetFences({*ctx_->inFlightFences[currentFrame_]});
 
     ctx_->commandBuffers[currentFrame_].reset();
     recordCommandBuffer(ctx_->commandBuffers[currentFrame_], imageIndex);
 
     // Submit
-    ::vk::Semaphore waitSemaphores[] = {ctx_->imageAvailableSemaphores[currentFrame_]};
+    ::vk::Semaphore waitSemaphores[] = {*ctx_->imageAvailableSemaphores[currentFrame_]};
     ::vk::PipelineStageFlags waitStages[] = {::vk::PipelineStageFlagBits::eColorAttachmentOutput};
-    ::vk::Semaphore signalSemaphores[] = {ctx_->renderFinishedSemaphores[currentFrame_]};
+    ::vk::Semaphore signalSemaphores[] = {*ctx_->renderFinishedSemaphores[currentFrame_]};
+    ::vk::CommandBuffer cmdBuf = *ctx_->commandBuffers[currentFrame_];
 
     ::vk::SubmitInfo submitInfo{
         1, waitSemaphores, waitStages,
-        1, &ctx_->commandBuffers[currentFrame_],
+        1, &cmdBuf,
         1, signalSemaphores
     };
 
-    ctx_->graphicsQueue.submit(submitInfo, ctx_->inFlightFences[currentFrame_]);
+    ctx_->graphicsQueue.submit(submitInfo, *ctx_->inFlightFences[currentFrame_]);
 
     // Present
+    ::vk::SwapchainKHR swapchains[] = {*ctx_->swapchain};
     ::vk::PresentInfoKHR presentInfo{
         1, signalSemaphores,
-        1, &ctx_->swapchain,
+        1, swapchains,
         &imageIndex
     };
 
@@ -137,7 +137,7 @@ void VkVisualTestApp::mainLoop() {
 }
 
 void VkVisualTestApp::cleanup() {
-    ctx_->cleanup();
+    // RAII handles Vulkan cleanup automatically
     ctx_.reset();
 
     glfwDestroyWindow(window_);

@@ -39,7 +39,7 @@ void RenderPassBuilder::build(VkCtx& ctx) {
         1, &dependency
     };
 
-    ctx.renderPass = ctx.device.createRenderPass(renderPassInfo);
+    ctx.renderPass = vk::raii::RenderPass(ctx.device, renderPassInfo);
     qCInfo(logger()) << "Render pass created";
 }
 

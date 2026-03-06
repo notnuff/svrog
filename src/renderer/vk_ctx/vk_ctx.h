@@ -1,6 +1,6 @@
 #pragma once
 
-#include <vulkan/vulkan.hpp>
+#include <vulkan/vulkan_raii.hpp>
 
 #include <optional>
 #include <vector>
@@ -23,42 +23,43 @@ struct SwapchainSupportDetails {
 };
 
 struct VkCtx {
-    ::vk::Instance instance;
-    ::vk::SurfaceKHR surface;
-    ::vk::PhysicalDevice physicalDevice;
-    ::vk::Device device;
+    // RAII context must be first member to be initialized first and destroyed last
+    ::vk::raii::Context context;
+
+    ::vk::raii::Instance instance{nullptr};
+    ::vk::raii::SurfaceKHR surface{nullptr};
+    ::vk::PhysicalDevice physicalDevice;  // Non-owning handle, no RAII wrapper
+    ::vk::raii::Device device{nullptr};
 
 #ifndef NDEBUG
-    VkDebugUtilsMessengerEXT debugMessenger = VK_NULL_HANDLE;
+    ::vk::raii::DebugUtilsMessengerEXT debugMessenger{nullptr};
 #endif
 
-    ::vk::Queue graphicsQueue;
-    ::vk::Queue presentQueue;
+    ::vk::Queue graphicsQueue;  // Non-owning handle, no RAII wrapper
+    ::vk::Queue presentQueue;   // Non-owning handle, no RAII wrapper
     QueueFamilyIndices queueFamilyIndices;
 
-    ::vk::SwapchainKHR swapchain;
-    std::vector<::vk::Image> swapchainImages;
-    std::vector<::vk::ImageView> swapchainImageViews;
+    ::vk::raii::SwapchainKHR swapchain{nullptr};
+    std::vector<::vk::Image> swapchainImages;  // Non-owning handles, no RAII wrapper
+    std::vector<::vk::raii::ImageView> swapchainImageViews;
     ::vk::Format swapchainImageFormat;
     ::vk::Extent2D swapchainExtent;
 
-    ::vk::RenderPass renderPass;
+    ::vk::raii::RenderPass renderPass{nullptr};
 
-    ::vk::PipelineLayout pipelineLayout;
-    ::vk::Pipeline graphicsPipeline;
+    ::vk::raii::PipelineLayout pipelineLayout{nullptr};
+    ::vk::raii::Pipeline graphicsPipeline{nullptr};
 
-    std::vector<::vk::Framebuffer> framebuffers;
+    std::vector<::vk::raii::Framebuffer> framebuffers;
 
-    ::vk::CommandPool commandPool;
-    std::vector<::vk::CommandBuffer> commandBuffers;
+    ::vk::raii::CommandPool commandPool{nullptr};
+    ::vk::raii::CommandBuffers commandBuffers{nullptr};
 
-    std::vector<::vk::Semaphore> imageAvailableSemaphores;
-    std::vector<::vk::Semaphore> renderFinishedSemaphores;
-    std::vector<::vk::Fence> inFlightFences;
+    std::vector<::vk::raii::Semaphore> imageAvailableSemaphores;
+    std::vector<::vk::raii::Semaphore> renderFinishedSemaphores;
+    std::vector<::vk::raii::Fence> inFlightFences;
 
     static constexpr int MAX_FRAMES_IN_FLIGHT = 2;
-
-    void cleanup();
 };
 
 } // namespace nuff::renderer

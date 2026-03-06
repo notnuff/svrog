@@ -61,7 +61,7 @@ vk::Extent2D SwapchainBuilder::chooseSwapExtent(
 }
 
 void SwapchainBuilder::build(VkCtx& ctx) {
-    auto swapchainSupport = querySwapchainSupport(ctx.physicalDevice, ctx.surface);
+    auto swapchainSupport = querySwapchainSupport(ctx.physicalDevice, *ctx.surface);
 
     auto surfaceFormat = chooseSwapSurfaceFormat(swapchainSupport.formats, m_preferredFormat);
     auto presentMode = chooseSwapPresentMode(swapchainSupport.presentModes, m_preferredPresentMode);
@@ -75,7 +75,7 @@ void SwapchainBuilder::build(VkCtx& ctx) {
 
     vk::SwapchainCreateInfoKHR createInfo{
         {},
-        ctx.surface,
+        *ctx.surface,
         imageCount,
         surfaceFormat.format,
         surfaceFormat.colorSpace,
@@ -102,8 +102,8 @@ void SwapchainBuilder::build(VkCtx& ctx) {
     createInfo.presentMode = presentMode;
     createInfo.clipped = VK_TRUE;
 
-    ctx.swapchain = ctx.device.createSwapchainKHR(createInfo);
-    ctx.swapchainImages = ctx.device.getSwapchainImagesKHR(ctx.swapchain);
+    ctx.swapchain = vk::raii::SwapchainKHR(ctx.device, createInfo);
+    ctx.swapchainImages = ctx.swapchain.getImages();
     ctx.swapchainImageFormat = surfaceFormat.format;
     ctx.swapchainExtent = extent;
 
@@ -117,7 +117,7 @@ void SwapchainBuilder::build(VkCtx& ctx) {
             {},
             {vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1}
         };
-        ctx.swapchainImageViews[i] = ctx.device.createImageView(viewInfo);
+        ctx.swapchainImageViews.emplace_back(ctx.device, viewInfo);
     }
 
     qCInfo(logger()) << "Swapchain created (" << extent.width << "x" << extent.height << ")";

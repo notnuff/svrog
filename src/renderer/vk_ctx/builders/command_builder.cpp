@@ -8,16 +8,15 @@ void CommandBuilder::build(VkCtx& ctx) {
         ctx.queueFamilyIndices.graphicsFamily.value()
     };
 
-    ctx.commandPool = ctx.device.createCommandPool(poolInfo);
+    ctx.commandPool = vk::raii::CommandPool(ctx.device, poolInfo);
 
-    ctx.commandBuffers.resize(VkCtx::MAX_FRAMES_IN_FLIGHT);
     vk::CommandBufferAllocateInfo allocInfo{
-        ctx.commandPool,
+        *ctx.commandPool,
         vk::CommandBufferLevel::ePrimary,
-        static_cast<uint32_t>(ctx.commandBuffers.size())
+        VkCtx::MAX_FRAMES_IN_FLIGHT
     };
 
-    ctx.commandBuffers = ctx.device.allocateCommandBuffers(allocInfo);
+    ctx.commandBuffers = vk::raii::CommandBuffers(ctx.device, allocInfo);
 
     qCInfo(logger()) << "Command pool and" << ctx.commandBuffers.size() << "command buffers created";
 }

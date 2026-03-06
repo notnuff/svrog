@@ -41,9 +41,9 @@ std::vector<uint32_t> PipelineBuilder::readShaderFile(const std::string& path) {
     return buffer;
 }
 
-vk::ShaderModule PipelineBuilder::createShaderModule(vk::Device device, const std::vector<uint32_t>& code) {
+vk::raii::ShaderModule PipelineBuilder::createShaderModule(const vk::raii::Device& device, const std::vector<uint32_t>& code) {
     vk::ShaderModuleCreateInfo createInfo{{}, code.size() * sizeof(uint32_t), code.data()};
-    return device.createShaderModule(createInfo);
+    return vk::raii::ShaderModule(device, createInfo);
 }
 
 
@@ -53,12 +53,12 @@ void PipelineBuilder::build(VkCtx& ctx) {
     std::vector<uint32_t> fragCode = m_fragmentShaderCode.empty()
         ? readShaderFile(m_fragmentShaderPath) : m_fragmentShaderCode;
 
-    vk::ShaderModule vertShaderModule = createShaderModule(ctx.device, vertCode);
-    vk::ShaderModule fragShaderModule = createShaderModule(ctx.device, fragCode);
+    vk::raii::ShaderModule vertShaderModule = createShaderModule(ctx.device, vertCode);
+    vk::raii::ShaderModule fragShaderModule = createShaderModule(ctx.device, fragCode);
 
     vk::PipelineShaderStageCreateInfo shaderStages[] = {
-        {{}, vk::ShaderStageFlagBits::eVertex, vertShaderModule, "main"},
-        {{}, vk::ShaderStageFlagBits::eFragment, fragShaderModule, "main"}
+        {{}, vk::ShaderStageFlagBits::eVertex, *vertShaderModule, "main"},
+        {{}, vk::ShaderStageFlagBits::eFragment, *fragShaderModule, "main"}
     };
 
     vk::PipelineVertexInputStateCreateInfo vertexInputInfo{};
@@ -104,7 +104,7 @@ void PipelineBuilder::build(VkCtx& ctx) {
     };
 
     vk::PipelineLayoutCreateInfo pipelineLayoutInfo{};
-    ctx.pipelineLayout = ctx.device.createPipelineLayout(pipelineLayoutInfo);
+    ctx.pipelineLayout = vk::raii::PipelineLayout(ctx.device, pipelineLayoutInfo);
 
     vk::GraphicsPipelineCreateInfo pipelineInfo{
         {},
@@ -118,19 +118,14 @@ void PipelineBuilder::build(VkCtx& ctx) {
         nullptr,
         &colorBlending,
         nullptr,
-        ctx.pipelineLayout,
-        ctx.renderPass,
+        *ctx.pipelineLayout,
+        *ctx.renderPass,
         0
     };
 
-    auto result = ctx.device.createGraphicsPipeline(nullptr, pipelineInfo);
-    if (result.result != vk::Result::eSuccess) {
-        throw std::runtime_error("Failed to create graphics pipeline");
-    }
-    ctx.graphicsPipeline = result.value;
+    ctx.graphicsPipeline = vk::raii::Pipeline(ctx.device, nullptr, pipelineInfo);
 
-    ctx.device.destroyShaderModule(fragShaderModule);
-    ctx.device.destroyShaderModule(vertShaderModule);
+    // Shader modules are automatically destroyed by RAII
 
     qCInfo(logger()) << "Graphics pipeline created";
 }

@@ -75,8 +75,8 @@ void DeviceBuilder::build(VkCtx& ctx) {
     }
 
     for (const auto& device : physicalDevices) {
-        if (isDeviceSuitable(device, ctx.surface, m_deviceExtensions)) {
-            ctx.physicalDevice = device;
+        if (isDeviceSuitable(*device, *ctx.surface, m_deviceExtensions)) {
+            ctx.physicalDevice = *device;
             break;
         }
     }
@@ -88,7 +88,7 @@ void DeviceBuilder::build(VkCtx& ctx) {
     auto props = ctx.physicalDevice.getProperties();
     qCInfo(logger()) << "Selected GPU:" << props.deviceName.data();
 
-    ctx.queueFamilyIndices = findQueueFamilies(ctx.physicalDevice, ctx.surface);
+    ctx.queueFamilyIndices = findQueueFamilies(ctx.physicalDevice, *ctx.surface);
 
     std::vector<vk::DeviceQueueCreateInfo> queueCreateInfos;
     std::set<uint32_t> uniqueQueueFamilies = {
@@ -114,7 +114,7 @@ void DeviceBuilder::build(VkCtx& ctx) {
         &deviceFeatures
     };
 
-    ctx.device = ctx.physicalDevice.createDevice(createInfo);
+    ctx.device = vk::raii::Device(ctx.physicalDevice, createInfo);
     ctx.graphicsQueue = ctx.device.getQueue(ctx.queueFamilyIndices.graphicsFamily.value(), 0);
     ctx.presentQueue = ctx.device.getQueue(ctx.queueFamilyIndices.presentFamily.value(), 0);
 
