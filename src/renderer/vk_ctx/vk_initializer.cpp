@@ -73,16 +73,23 @@ std::unique_ptr<VkCtx> VkInitializer::initialize() {
 
     qCInfo(L::vkInitializer) << "Starting Vulkan initialization...";
 
-    m_instanceBuilder->build(*ctx);
-    m_surfaceBuilder.build(*ctx);
-    m_deviceBuilder.build(*ctx);
-    m_swapchainBuilder.build(*ctx);
-    m_renderPassBuilder.build(*ctx);
-    m_pipelineBuilder.build(*ctx);
-    m_framebufferBuilder.build(*ctx);
-    m_commandBuilder.build(*ctx);
-    m_syncBuilder.build(*ctx);
-
+    try {
+        m_instanceBuilder->build(*ctx);
+        m_surfaceBuilder.build(*ctx);
+        m_deviceBuilder.build(*ctx);
+        m_swapchainBuilder.build(*ctx);
+        m_renderPassBuilder.build(*ctx);
+        m_pipelineBuilder.build(*ctx);
+        m_framebufferBuilder.build(*ctx);
+        m_commandBuilder.build(*ctx);
+        m_syncBuilder.build(*ctx);
+    } catch (const vk::SystemError& err) {
+        qCCritical(L::vkInitializer) << "Vulkan error: " << err.what();
+        return nullptr;
+    } catch (const std::exception& err) {
+        qCCritical(L::vkInitializer)  << "Error: " << err.what();
+        return nullptr;
+    }
     qCInfo(L::vkInitializer) << "Vulkan initialization complete!";
 
     return ctx;
