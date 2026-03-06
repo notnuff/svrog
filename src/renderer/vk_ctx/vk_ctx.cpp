@@ -2,6 +2,7 @@
 
 namespace nuff::renderer {
 
+// TODO: make a cleaner or move clean responsibility to respective builders
 void VkCtx::cleanup() {
     if (device) {
         device.waitIdle();
