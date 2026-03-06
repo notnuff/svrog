@@ -2,6 +2,9 @@ cmake_minimum_required(VERSION 4.1)
 
 project(renderer LANGUAGES CXX)
 
+set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_CXX_STANDARD_REQUIRED True)
+
 set(TARGET_NAME renderer)
 
 find_package(Vulkan REQUIRED)

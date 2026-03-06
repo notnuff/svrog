@@ -20,6 +20,7 @@ protected:
     std::string m_appName = "VkApp";
     std::string m_engineName = "svrog";
     std::vector<const char*> m_extensions;
+    std::vector<const char*> m_layers;
 };
 
 } // namespace nuff::renderer

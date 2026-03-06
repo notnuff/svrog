@@ -1,3 +1,5 @@
+#include <ranges>
+
 #include "vk_ctx/builders/instance_builder.h"
 
 namespace nuff::renderer {
@@ -29,11 +31,23 @@ void InstanceBuilder::build(VkCtx& ctx) {
     vk::InstanceCreateInfo createInfo{
         {},
         &appInfo,
-        0,
-        nullptr,
+        static_cast<uint32_t>(m_layers.size()),
+        m_layers.data(),
         static_cast<uint32_t>(m_extensions.size()),
         m_extensions.data()
     };
+
+    auto supportedExtensions = ctx.context.enumerateInstanceExtensionProperties();
+    for (const auto* extension : m_extensions) {
+        const auto extensionPresent = std::ranges::any_of(supportedExtensions,
+            [extension](auto const& extensionProperty)
+            { return strcmp(extensionProperty.extensionName, extension) == 0; });
+
+        if (extensionPresent) {
+            continue;
+        }
+        throw std::runtime_error("Required extension not supported: " + std::string(extension));
+    }
 
     ctx.instance = vk::raii::Instance(ctx.context, createInfo);
     qCInfo(logger()) << "Vulkan instance created";

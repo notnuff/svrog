@@ -10,29 +10,12 @@ DebugInstanceBuilder::DebugInstanceBuilder() {
 void DebugInstanceBuilder::build(VkCtx& ctx) {
     qCInfo(logger()) << "Building Vulkan instance with debug features enabled";
 
-    // TODO: use inheritance to build debug instance, not copy-paste
-    // Build instance with validation layers
-    vk::ApplicationInfo appInfo{
-        m_appName.c_str(),
-        VK_MAKE_VERSION(1, 0, 0),
-        m_engineName.c_str(),
-        VK_MAKE_VERSION(1, 0, 0),
-        VK_API_VERSION_1_3
-    };
-
-    vk::InstanceCreateInfo createInfo{
-        {},
-        &appInfo,
-        static_cast<uint32_t>(m_validationLayers.size()),
-        m_validationLayers.data(),
-        static_cast<uint32_t>(m_extensions.size()),
-        m_extensions.data()
-    };
-
-    ctx.instance = vk::raii::Instance(ctx.context, createInfo);
-    qCInfo(logger()) << "Vulkan instance created with validation layers";
+    m_layers.insert(m_layers.end(), m_validationLayers.begin(), m_validationLayers.end());
+    InstanceBuilder::build(ctx);
 
     setupDebugMessenger(ctx);
+
+    qCInfo(logger()) << "Vulkan instance created with validation layers";
 }
 
 void DebugInstanceBuilder::setupDebugMessenger(VkCtx& ctx) {
@@ -45,7 +28,7 @@ void DebugInstanceBuilder::setupDebugMessenger(VkCtx& ctx) {
             vk::DebugUtilsMessageTypeFlagBitsEXT::eValidation |
             vk::DebugUtilsMessageTypeFlagBitsEXT::ePerformance,
         debugCallback,
-        this  // Pass this pointer to access logger
+        this
     };
 
     ctx.debugMessenger = vk::raii::DebugUtilsMessengerEXT(ctx.instance, createInfo);
