@@ -26,9 +26,13 @@ add_executable(${TARGET_NAME}
         ${HEADERS}
 )
 
+# TODO: meh, stinky
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../../logging ${CMAKE_CURRENT_BINARY_DIR}/logging)
+
 target_link_libraries(${TARGET_NAME} PRIVATE
         glfw
         renderer
+        logging
 )
 
 target_include_directories(${TARGET_NAME} PRIVATE

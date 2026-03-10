@@ -7,9 +7,12 @@
 #include <iostream>
 
 #include "bridge/vulkandemorenderer.h"
+#include "logging/colored_logger.h"
 
 int main(int argc, char **argv)
 {
+    // Install custom colored message handler
+    nuff::logging::installColoredLogger();
 
     QGuiApplication app(argc, argv);
     QQuickWindow::setGraphicsApi(QSGRendererInterface::Vulkan);

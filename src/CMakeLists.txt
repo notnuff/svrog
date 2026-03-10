@@ -5,6 +5,7 @@ find_package(Qt6 REQUIRED COMPONENTS Core Gui Quick Qml)
 
 qt_standard_project_setup(REQUIRES 6.5)
 
+add_subdirectory(logging)
 add_subdirectory(ui/VulkanViewport)
 add_subdirectory(ui/MainWindow)
 add_subdirectory(renderer)
@@ -18,6 +19,7 @@ target_link_libraries(${TARGET_NAME} PRIVATE
     Qt6::Core
     Qt6::Gui
     Qt6::Quick
+    logging
     bridge
     renderer
     MainWindowLibplugin
