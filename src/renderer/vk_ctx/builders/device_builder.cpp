@@ -1,7 +1,79 @@
 #include "vk_ctx/builders/device_builder.h"
 
 #include <set>
+#include <sstream>
 #include <stdexcept>
+
+namespace {
+std::string formatDeviceFeatures(const vk::PhysicalDeviceFeatures& features) {
+    std::ostringstream oss;
+    oss << "\n";
+
+    // Helper macro to print feature status
+    #define PRINT_FEATURE(name) \
+        oss << "  " << #name << ": " << (features.name ? "YES" : "NO") << "\n"
+
+    PRINT_FEATURE(robustBufferAccess);
+    PRINT_FEATURE(fullDrawIndexUint32);
+    PRINT_FEATURE(imageCubeArray);
+    PRINT_FEATURE(independentBlend);
+    PRINT_FEATURE(geometryShader);
+    PRINT_FEATURE(tessellationShader);
+    PRINT_FEATURE(sampleRateShading);
+    PRINT_FEATURE(dualSrcBlend);
+    PRINT_FEATURE(logicOp);
+    PRINT_FEATURE(multiDrawIndirect);
+    PRINT_FEATURE(drawIndirectFirstInstance);
+    PRINT_FEATURE(depthClamp);
+    PRINT_FEATURE(depthBiasClamp);
+    PRINT_FEATURE(fillModeNonSolid);
+    PRINT_FEATURE(depthBounds);
+    PRINT_FEATURE(wideLines);
+    PRINT_FEATURE(largePoints);
+    PRINT_FEATURE(alphaToOne);
+    PRINT_FEATURE(multiViewport);
+    PRINT_FEATURE(samplerAnisotropy);
+    PRINT_FEATURE(textureCompressionETC2);
+    PRINT_FEATURE(textureCompressionASTC_LDR);
+    PRINT_FEATURE(textureCompressionBC);
+    PRINT_FEATURE(occlusionQueryPrecise);
+    PRINT_FEATURE(pipelineStatisticsQuery);
+    PRINT_FEATURE(vertexPipelineStoresAndAtomics);
+    PRINT_FEATURE(fragmentStoresAndAtomics);
+    PRINT_FEATURE(shaderTessellationAndGeometryPointSize);
+    PRINT_FEATURE(shaderImageGatherExtended);
+    PRINT_FEATURE(shaderStorageImageExtendedFormats);
+    PRINT_FEATURE(shaderStorageImageMultisample);
+    PRINT_FEATURE(shaderStorageImageReadWithoutFormat);
+    PRINT_FEATURE(shaderStorageImageWriteWithoutFormat);
+    PRINT_FEATURE(shaderUniformBufferArrayDynamicIndexing);
+    PRINT_FEATURE(shaderSampledImageArrayDynamicIndexing);
+    PRINT_FEATURE(shaderStorageBufferArrayDynamicIndexing);
+    PRINT_FEATURE(shaderStorageImageArrayDynamicIndexing);
+    PRINT_FEATURE(shaderClipDistance);
+    PRINT_FEATURE(shaderCullDistance);
+    PRINT_FEATURE(shaderFloat64);
+    PRINT_FEATURE(shaderInt64);
+    PRINT_FEATURE(shaderInt16);
+    PRINT_FEATURE(shaderResourceResidency);
+    PRINT_FEATURE(shaderResourceMinLod);
+    PRINT_FEATURE(sparseBinding);
+    PRINT_FEATURE(sparseResidencyBuffer);
+    PRINT_FEATURE(sparseResidencyImage2D);
+    PRINT_FEATURE(sparseResidencyImage3D);
+    PRINT_FEATURE(sparseResidency2Samples);
+    PRINT_FEATURE(sparseResidency4Samples);
+    PRINT_FEATURE(sparseResidency8Samples);
+    PRINT_FEATURE(sparseResidency16Samples);
+    PRINT_FEATURE(sparseResidencyAliased);
+    PRINT_FEATURE(variableMultisampleRate);
+    PRINT_FEATURE(inheritedQueries);
+
+    #undef PRINT_FEATURE
+
+    return oss.str();
+}
+} // anonymous namespace
 
 namespace nuff::renderer {
 
@@ -76,6 +148,7 @@ void DeviceBuilder::build(VkCtx& ctx) {
 
     for (const auto& device : physicalDevices) {
         if (isDeviceSuitable(*device, *ctx.surface, m_deviceExtensions)) {
+            // TODO add device selection when we have more than one GPU
             ctx.physicalDevice = vk::raii::PhysicalDevice(device);
             break;
         }
@@ -85,8 +158,22 @@ void DeviceBuilder::build(VkCtx& ctx) {
         throw std::runtime_error("Failed to find a suitable GPU");
     }
 
-    auto props = ctx.physicalDevice.getProperties();
+    const auto& props = ctx.physicalDevice.getProperties();
     qCInfo(logger()) << "Selected GPU:" << props.deviceName.data();
+
+    const auto devVkVersion = props.apiVersion;
+    qCInfo(logger())
+        << "Supported Vulkan version:"
+        << QString("%1.%2.%3")
+            .arg(vk::versionMajor(devVkVersion))
+            .arg(vk::versionMinor(devVkVersion))
+            .arg(vk::versionPatch(devVkVersion));
+
+    const auto& features = ctx.physicalDevice.getFeatures();
+    qCInfo(logger())
+        << "Device features:"
+        << formatDeviceFeatures(features).c_str();
+
 
     ctx.queueFamilyIndices = findQueueFamilies(ctx.physicalDevice, *ctx.surface);
 
