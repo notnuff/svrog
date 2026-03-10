@@ -37,16 +37,28 @@ void InstanceBuilder::build(VkCtx& ctx) {
         m_extensions.data()
     };
 
-    auto supportedExtensions = ctx.context.enumerateInstanceExtensionProperties();
+    const auto& supportedExtensions = ctx.context.enumerateInstanceExtensionProperties();
     for (const auto* extension : m_extensions) {
         const auto extensionPresent = std::ranges::any_of(supportedExtensions,
-            [extension](auto const& extensionProperty)
+            [extension](const auto& extensionProperty)
             { return strcmp(extensionProperty.extensionName, extension) == 0; });
 
         if (extensionPresent) {
             continue;
         }
         throw std::runtime_error("Required extension not supported: " + std::string(extension));
+    }
+
+    const auto& supportedLayers = ctx.context.enumerateInstanceLayerProperties();
+    for (const auto* layer : m_layers) {
+        const auto layerPresent = std::ranges::any_of(supportedLayers,
+            [layer](const auto& layerProperty)
+            { return strcmp(layerProperty.layerName, layer) == 0; });
+
+        if (layerPresent) {
+            continue;
+        }
+        throw std::runtime_error("Required layer not supported: " + std::string(layer));
     }
 
     ctx.instance = vk::raii::Instance(ctx.context, createInfo);
