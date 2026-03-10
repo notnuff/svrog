@@ -114,19 +114,26 @@ QueueFamilyIndices DeviceBuilder::findQueueFamilies(vk::PhysicalDevice device, v
 }
 
 bool DeviceBuilder::checkDeviceExtensionSupport(vk::PhysicalDevice device,
-                                                 const std::vector<const char*>& extensions) {
+                                                const std::vector<const char *> &reqExtensions)
+{
     auto availableExtensions = device.enumerateDeviceExtensionProperties();
-    std::set<std::string> requiredExtensions(extensions.begin(), extensions.end());
 
-    for (const auto& extension : availableExtensions) {
-        requiredExtensions.erase(extension.extensionName);
-    }
+    const bool supportsAllRequiredExtensions = std::ranges::all_of(
+            reqExtensions, [&availableExtensions](const auto &requiredDeviceExtension) {
+                return std::ranges::any_of(
+                        availableExtensions,
+                        [&requiredDeviceExtension](const auto &availableDeviceExtension) {
+                            return strcmp(availableDeviceExtension.extensionName,
+                                requiredDeviceExtension) == 0;
+                        });
+            });
 
-    return requiredExtensions.empty();
+    return supportsAllRequiredExtensions;
 }
 
 bool DeviceBuilder::isDeviceSuitable(vk::PhysicalDevice device, vk::SurfaceKHR surface,
-                                      const std::vector<const char*>& extensions) {
+                                     const std::vector<const char *> &extensions)
+{
     auto indices = findQueueFamilies(device, surface);
     bool extensionsSupported = checkDeviceExtensionSupport(device, extensions);
 
@@ -137,7 +144,17 @@ bool DeviceBuilder::isDeviceSuitable(vk::PhysicalDevice device, vk::SurfaceKHR s
         swapchainAdequate = !formats.empty() && !presentModes.empty();
     }
 
-    return indices.isComplete() && extensionsSupported && swapchainAdequate;
+    // TODO: this should be passed from the creator, just like with extensions
+    auto features = device.getFeatures2<vk::PhysicalDeviceFeatures2,
+                                         vk::PhysicalDeviceVulkan13Features,
+                                         vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT>();
+
+    bool supportsRequiredFeatures =
+        features.get<vk::PhysicalDeviceVulkan13Features>().dynamicRendering
+        && features.get<vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT>().extendedDynamicState;
+
+    return indices.isComplete() && extensionsSupported && swapchainAdequate
+            && supportsRequiredFeatures;
 }
 
 void DeviceBuilder::build(VkCtx& ctx) {

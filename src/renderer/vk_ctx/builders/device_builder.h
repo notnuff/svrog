@@ -24,7 +24,7 @@ private:
     static bool isDeviceSuitable(::vk::PhysicalDevice device, ::vk::SurfaceKHR surface,
                                   const std::vector<const char*>& extensions);
     static bool checkDeviceExtensionSupport(::vk::PhysicalDevice device,
-                                             const std::vector<const char*>& extensions);
+                                             const std::vector<const char*>& reqExtensions);
 };
 
 } // namespace nuff::renderer
