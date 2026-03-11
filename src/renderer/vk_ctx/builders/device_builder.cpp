@@ -1,3 +1,4 @@
+#define VULKAN_HPP_NO_STRUCT_CONSTRUCTORS
 #include "vk_ctx/builders/device_builder.h"
 
 #include <set>
@@ -202,20 +203,34 @@ void DeviceBuilder::build(VkCtx& ctx) {
 
     float queuePriority = 1.0f;
     for (uint32_t queueFamily : uniqueQueueFamilies) {
-        vk::DeviceQueueCreateInfo queueCreateInfo{{}, queueFamily, 1, &queuePriority};
+        vk::DeviceQueueCreateInfo queueCreateInfo{
+            .queueFamilyIndex = queueFamily,
+            .queueCount = 1,
+            .pQueuePriorities = &queuePriority
+        };
         queueCreateInfos.push_back(queueCreateInfo);
     }
 
-    vk::PhysicalDeviceFeatures deviceFeatures{};
+    vk::StructureChain<
+        vk::PhysicalDeviceFeatures2,
+        vk::PhysicalDeviceVulkan13Features,
+        vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT
+    > featureChain{
+        vk::PhysicalDeviceFeatures2{},
+        vk::PhysicalDeviceVulkan13Features{
+            .dynamicRendering = VK_TRUE
+        },
+        vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT{
+            .extendedDynamicState = VK_TRUE
+        }
+    };
 
     vk::DeviceCreateInfo createInfo{
-        {},
-        static_cast<uint32_t>(queueCreateInfos.size()),
-        queueCreateInfos.data(),
-        0, nullptr,
-        static_cast<uint32_t>(m_deviceExtensions.size()),
-        m_deviceExtensions.data(),
-        &deviceFeatures
+        .pNext = &featureChain.get<vk::PhysicalDeviceFeatures2>(),
+        .queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size()),
+        .pQueueCreateInfos = queueCreateInfos.data(),
+        .enabledExtensionCount = static_cast<uint32_t>(m_deviceExtensions.size()),
+        .ppEnabledExtensionNames = m_deviceExtensions.data()
     };
 
     ctx.device = vk::raii::Device(ctx.physicalDevice, createInfo);
