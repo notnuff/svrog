@@ -1,3 +1,4 @@
+#define VULKAN_HPP_NO_STRUCT_CONSTRUCTORS
 #include "vk_ctx/builders/swapchain_builder.h"
 
 #include <algorithm>
@@ -31,6 +32,9 @@ SwapchainSupportDetails SwapchainBuilder::querySwapchainSupport(vk::PhysicalDevi
 
 vk::SurfaceFormatKHR SwapchainBuilder::chooseSwapSurfaceFormat(
     const std::vector<vk::SurfaceFormatKHR>& formats, vk::Format preferred) {
+    if (formats.empty()) {
+        throw std::runtime_error("No surface formats available");
+    }
     for (const auto& format : formats) {
         if (format.format == preferred && format.colorSpace == vk::ColorSpaceKHR::eSrgbNonlinear) {
             return format;
@@ -40,10 +44,20 @@ vk::SurfaceFormatKHR SwapchainBuilder::chooseSwapSurfaceFormat(
 }
 
 vk::PresentModeKHR SwapchainBuilder::chooseSwapPresentMode(
-    const std::vector<vk::PresentModeKHR>& modes, vk::PresentModeKHR preferred) {
-    for (const auto& mode : modes) {
-        if (mode == preferred) return mode;
+    const std::vector<vk::PresentModeKHR> &modes, vk::PresentModeKHR preferred)
+{
+    if (std::ranges::any_of(modes, [preferred](auto presentMode) {
+        return presentMode == preferred;
+    })) {
+        return preferred;
     }
+
+    if (!std::ranges::any_of(modes, [](auto presentMode) {
+        return presentMode == vk::PresentModeKHR::eFifo;
+    })) {
+        throw std::runtime_error("No FIFO present mode available");
+    }
+
     return vk::PresentModeKHR::eFifo;
 }
 
@@ -74,14 +88,14 @@ void SwapchainBuilder::build(VkCtx& ctx) {
     }
 
     vk::SwapchainCreateInfoKHR createInfo{
-        {},
-        *ctx.surface,
-        imageCount,
-        surfaceFormat.format,
-        surfaceFormat.colorSpace,
-        extent,
-        1,
-        vk::ImageUsageFlagBits::eColorAttachment
+        .flags = {},
+        .surface = *ctx.surface,
+        .minImageCount = imageCount,
+        .imageFormat = surfaceFormat.format,
+        .imageColorSpace = surfaceFormat.colorSpace,
+        .imageExtent = extent,
+        .imageArrayLayers = 1,
+        .imageUsage = vk::ImageUsageFlagBits::eColorAttachment
     };
 
     uint32_t queueFamilyIndices[] = {
@@ -109,12 +123,18 @@ void SwapchainBuilder::build(VkCtx& ctx) {
 
     for (size_t i = 0; i < ctx.swapchainImages.size(); i++) {
         vk::ImageViewCreateInfo viewInfo{
-            {},
-            ctx.swapchainImages[i],
-            vk::ImageViewType::e2D,
-            ctx.swapchainImageFormat,
-            {},
-            {vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1}
+            .flags = {},
+            .image = ctx.swapchainImages[i],
+            .viewType = vk::ImageViewType::e2D,
+            .format = ctx.swapchainImageFormat,
+            .components = {},
+            .subresourceRange = {
+                .aspectMask = vk::ImageAspectFlagBits::eColor,
+                .baseMipLevel = 0,
+                .levelCount = 1,
+                .baseArrayLayer = 0,
+                .layerCount = 1
+            }
         };
         ctx.swapchainImageViews.emplace_back(ctx.device, viewInfo);
     }

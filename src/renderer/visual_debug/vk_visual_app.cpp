@@ -43,6 +43,9 @@ void VkVisualTestApp::initVulkan() {
 
     VkInitializer initializer;
 
+    int width, height;
+    glfwGetFramebufferSize(window_, &width, &height);
+
     ctx_ = initializer
         .setAppName("VkVisualMain")
         .setEngineName("svrog")
@@ -54,7 +57,7 @@ void VkVisualTestApp::initVulkan() {
             }
             return surface;
         })
-        .setExtent(DEFAULT_WIDTH, DEFAULT_HEIGHT)
+        .setExtent(width, height)
         .setVertexShaderCode(shaders::triangleVertexShader)
         .setFragmentShaderCode(shaders::triangleFragmentShader)
         .initialize();
