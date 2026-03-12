@@ -4,6 +4,8 @@
 
 namespace nuff::renderer {
 
+// TODO: try off-screen rendering and rendering over the internet via WebRTC
+// TODO: adapt to QWindow
 SurfaceBuilder& SurfaceBuilder::setSurfaceCreator(SurfaceCreatorFn creator) {
     m_surfaceCreator = std::move(creator);
     return *this;
