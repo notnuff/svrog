@@ -1,5 +1,9 @@
 #include "vk_ctx/builders/debug_instance_builder.h"
 
+namespace L {
+Q_LOGGING_CATEGORY(vkValidationLayer, "nuff.renderer.vk.validation")
+}
+
 namespace nuff::renderer {
 
 DebugInstanceBuilder::DebugInstanceBuilder() {
@@ -43,9 +47,7 @@ VKAPI_ATTR VkBool32 VKAPI_CALL DebugInstanceBuilder::debugCallback(
 
     (void)messageType;
 
-    auto* builder = static_cast<DebugInstanceBuilder*>(pUserData);
-    const QLoggingCategory& log = builder->logger();
-
+    const auto& log = L::vkValidationLayer;
     if (messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT) {
         qCCritical(log) << "[Vulkan Validation]" << pCallbackData->pMessage;
     } else if (messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT) {
