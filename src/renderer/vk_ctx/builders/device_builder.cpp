@@ -74,6 +74,22 @@ std::string formatDeviceFeatures(const vk::PhysicalDeviceFeatures& features) {
 
     return oss.str();
 }
+
+std::string formatSurfaceCapabilities(const vk::SurfaceCapabilitiesKHR& caps) {
+    std::ostringstream oss;
+    oss << "\n";
+    oss << "  minImageCount: " << caps.minImageCount << "\n";
+    oss << "  maxImageCount: " << (caps.maxImageCount == 0 ? "unlimited" : std::to_string(caps.maxImageCount)) << "\n";
+    oss << "  currentExtent: " << caps.currentExtent.width << "x" << caps.currentExtent.height << "\n";
+    oss << "  minImageExtent: " << caps.minImageExtent.width << "x" << caps.minImageExtent.height << "\n";
+    oss << "  maxImageExtent: " << caps.maxImageExtent.width << "x" << caps.maxImageExtent.height << "\n";
+    oss << "  maxImageArrayLayers: " << caps.maxImageArrayLayers << "\n";
+    oss << "  supportedTransforms: " << vk::to_string(caps.supportedTransforms) << "\n";
+    oss << "  currentTransform: " << vk::to_string(caps.currentTransform) << "\n";
+    oss << "  supportedCompositeAlpha: " << vk::to_string(caps.supportedCompositeAlpha) << "\n";
+    oss << "  supportedUsageFlags: " << vk::to_string(caps.supportedUsageFlags);
+    return oss.str();
+}
 } // anonymous namespace
 
 namespace nuff::renderer {
@@ -192,6 +208,10 @@ void DeviceBuilder::build(VkCtx& ctx) {
         << "Device features:"
         << formatDeviceFeatures(features).c_str();
 
+    auto capabilities = ctx.physicalDevice.getSurfaceCapabilitiesKHR(*ctx.surface);
+    qCInfo(logger())
+        << "Surface capabilities:"
+        << formatSurfaceCapabilities(capabilities).c_str();
 
     ctx.queueFamilyIndices = findQueueFamilies(ctx.physicalDevice, *ctx.surface);
 

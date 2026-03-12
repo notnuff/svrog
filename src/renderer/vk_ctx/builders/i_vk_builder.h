@@ -14,6 +14,7 @@ public:
 
 protected:
     // Shared logging category for all builders
+    // TODO: rework logger to be able to make a category mixin from overridden classes
     static const QLoggingCategory& logger() {
         static const QLoggingCategory category("nuff.renderer.vk.builder");
         return category;
