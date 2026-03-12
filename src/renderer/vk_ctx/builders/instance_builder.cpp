@@ -22,9 +22,9 @@ InstanceBuilder& InstanceBuilder::addExtensions(const std::vector<const char*>& 
 void InstanceBuilder::build(VkCtx& ctx) {
     vk::ApplicationInfo appInfo{
         m_appName.c_str(),
-        VK_MAKE_VERSION(1, 0, 0),
+        vk::makeApiVersion(0, 1, 0, 0),
         m_engineName.c_str(),
-        VK_MAKE_VERSION(1, 0, 0),
+        vk::makeApiVersion(0, 1, 0, 0),
         vk::ApiVersion14
     };
 

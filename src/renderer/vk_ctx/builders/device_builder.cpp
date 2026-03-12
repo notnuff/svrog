@@ -218,10 +218,10 @@ void DeviceBuilder::build(VkCtx& ctx) {
     > featureChain{
         vk::PhysicalDeviceFeatures2{},
         vk::PhysicalDeviceVulkan13Features{
-            .dynamicRendering = VK_TRUE
+            .dynamicRendering = vk::True
         },
         vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT{
-            .extendedDynamicState = VK_TRUE
+            .extendedDynamicState = vk::True
         }
     };
 

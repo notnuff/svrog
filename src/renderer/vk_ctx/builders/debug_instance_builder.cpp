@@ -4,7 +4,7 @@ namespace nuff::renderer {
 
 DebugInstanceBuilder::DebugInstanceBuilder() {
     // Add debug extensions
-    addExtensions({VK_EXT_DEBUG_UTILS_EXTENSION_NAME});
+    addExtensions({vk::EXTDebugUtilsExtensionName});
 }
 
 void DebugInstanceBuilder::build(VkCtx& ctx) {
@@ -56,7 +56,7 @@ VKAPI_ATTR VkBool32 VKAPI_CALL DebugInstanceBuilder::debugCallback(
         qCDebug(log) << "[Vulkan Validation]" << pCallbackData->pMessage;
     }
 
-    return VK_FALSE;
+    return vk::False;
 }
 
 } // namespace nuff::renderer

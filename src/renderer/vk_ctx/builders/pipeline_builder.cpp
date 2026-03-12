@@ -64,7 +64,7 @@ void PipelineBuilder::build(VkCtx& ctx) {
     vk::PipelineVertexInputStateCreateInfo vertexInputInfo{};
 
     vk::PipelineInputAssemblyStateCreateInfo inputAssembly{
-        {}, vk::PrimitiveTopology::eTriangleList, VK_FALSE
+        {}, vk::PrimitiveTopology::eTriangleList, vk::False
     };
 
     vk::Viewport viewport{
@@ -79,19 +79,19 @@ void PipelineBuilder::build(VkCtx& ctx) {
     vk::PipelineViewportStateCreateInfo viewportState{{}, 1, &viewport, 1, &scissor};
 
     vk::PipelineRasterizationStateCreateInfo rasterizer{
-        {}, VK_FALSE, VK_FALSE,
+        {}, vk::False, vk::False,
         vk::PolygonMode::eFill,
         vk::CullModeFlagBits::eBack,
         vk::FrontFace::eClockwise,
-        VK_FALSE, 0.0f, 0.0f, 0.0f, 1.0f
+        vk::False, 0.0f, 0.0f, 0.0f, 1.0f
     };
 
     vk::PipelineMultisampleStateCreateInfo multisampling{
-        {}, vk::SampleCountFlagBits::e1, VK_FALSE
+        {}, vk::SampleCountFlagBits::e1, vk::False
     };
 
     vk::PipelineColorBlendAttachmentState colorBlendAttachment{
-        VK_FALSE,
+        vk::False,
         vk::BlendFactor::eOne, vk::BlendFactor::eZero, vk::BlendOp::eAdd,
         vk::BlendFactor::eOne, vk::BlendFactor::eZero, vk::BlendOp::eAdd,
         vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG |
@@ -99,7 +99,7 @@ void PipelineBuilder::build(VkCtx& ctx) {
     };
 
     vk::PipelineColorBlendStateCreateInfo colorBlending{
-        {}, VK_FALSE, vk::LogicOp::eCopy,
+        {}, vk::False, vk::LogicOp::eCopy,
         1, &colorBlendAttachment
     };
 

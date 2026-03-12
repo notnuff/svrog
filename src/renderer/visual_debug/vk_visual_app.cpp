@@ -83,7 +83,7 @@ void VkVisualTestApp::recordCommandBuffer(const ::vk::raii::CommandBuffer& comma
 void VkVisualTestApp::drawFrame() {
     // Wait for previous frame
     auto waitResult = ctx_->device.waitForFences(
-        {*ctx_->inFlightFences[currentFrame_]}, VK_TRUE, UINT64_MAX);
+        {*ctx_->inFlightFences[currentFrame_]}, vk::True, UINT64_MAX);
     (void)waitResult;
 
     // Acquire next image

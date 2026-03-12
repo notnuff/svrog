@@ -100,7 +100,7 @@ void SwapchainBuilder::build(VkCtx& ctx) {
     createInfo.preTransform = swapchainSupport.capabilities.currentTransform;
     createInfo.compositeAlpha = vk::CompositeAlphaFlagBitsKHR::eOpaque;
     createInfo.presentMode = presentMode;
-    createInfo.clipped = VK_TRUE;
+    createInfo.clipped = vk::True;
 
     ctx.swapchain = vk::raii::SwapchainKHR(ctx.device, createInfo);
     ctx.swapchainImages = ctx.swapchain.getImages();

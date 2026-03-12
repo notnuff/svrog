@@ -18,7 +18,7 @@ public:
 private:
     bool m_requireGraphics = true;
     bool m_requirePresent = true;
-    std::vector<const char*> m_deviceExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
+    std::vector<const char*> m_deviceExtensions = { vk::KHRSwapchainExtensionName };
 
     static QueueFamilyIndices findQueueFamilies(::vk::PhysicalDevice device, ::vk::SurfaceKHR surface);
     static bool isDeviceSuitable(::vk::PhysicalDevice device, ::vk::SurfaceKHR surface,
