@@ -3,6 +3,17 @@
 
 #include <algorithm>
 #include <limits>
+#include <QDebug>
+
+QDebug operator<<(QDebug debug, const vk::SurfaceFormatKHR& format)
+{
+    QDebugStateSaver saver(debug);
+    debug.nospace() << "SurfaceFormatKHR("
+                    << "format: " << vk::to_string(format.format).c_str()
+                    << ", colorSpace: " << vk::to_string(format.colorSpace).c_str()
+                    << ")";
+    return debug;
+}
 
 namespace nuff::renderer {
 
@@ -77,6 +88,8 @@ vk::Extent2D SwapchainBuilder::chooseSwapExtent(
 void SwapchainBuilder::build(VkCtx& ctx) {
     auto swapchainSupport = querySwapchainSupport(ctx.physicalDevice, *ctx.surface);
 
+    qCInfo(logger()) << "Supported swapchain formats" << swapchainSupport.formats;
+
     auto surfaceFormat = chooseSwapSurfaceFormat(swapchainSupport.formats, m_preferredFormat);
     auto presentMode = chooseSwapPresentMode(swapchainSupport.presentModes, m_preferredPresentMode);
     auto extent = chooseSwapExtent(swapchainSupport.capabilities, m_width, m_height);
@@ -91,6 +104,7 @@ void SwapchainBuilder::build(VkCtx& ctx) {
         .flags = {},
         .surface = *ctx.surface,
         .minImageCount = imageCount,
+        // TODO: try hdr format?
         .imageFormat = surfaceFormat.format,
         .imageColorSpace = surfaceFormat.colorSpace,
         .imageExtent = extent,
