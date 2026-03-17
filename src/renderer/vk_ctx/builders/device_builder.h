@@ -20,10 +20,10 @@ private:
     bool m_requirePresent = true;
     std::vector<const char*> m_deviceExtensions = { vk::KHRSwapchainExtensionName };
 
-    static QueueFamilyIndices findQueueFamilies(::vk::PhysicalDevice device, ::vk::SurfaceKHR surface);
-    static bool isDeviceSuitable(::vk::PhysicalDevice device, ::vk::SurfaceKHR surface,
+    static QueueFamilyIndices findQueueFamilies(vk::PhysicalDevice device, vk::SurfaceKHR surface);
+    static bool isDeviceSuitable(vk::PhysicalDevice device, vk::SurfaceKHR surface,
                                   const std::vector<const char*>& extensions);
-    static bool checkDeviceExtensionSupport(::vk::PhysicalDevice device,
+    static bool checkDeviceExtensionSupport(vk::PhysicalDevice device,
                                              const std::vector<const char*>& reqExtensions);
 };
 

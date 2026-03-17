@@ -24,7 +24,7 @@ private:
     std::vector<uint32_t> m_fragmentShaderCode;
 
     static std::vector<uint32_t> readShaderFile(const std::string& path);
-    static ::vk::raii::ShaderModule createShaderModule(const ::vk::raii::Device& device, const std::vector<uint32_t>& code);
+    static vk::raii::ShaderModule createShaderModule(const vk::raii::Device& device, const std::vector<uint32_t>& code);
 };
 
 } // namespace nuff::renderer

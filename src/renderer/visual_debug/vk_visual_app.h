@@ -41,7 +41,7 @@ private:
     void mainLoop();
     void cleanup();
 
-    void recordCommandBuffer(const ::vk::raii::CommandBuffer& commandBuffer, uint32_t imageIndex);
+    void recordCommandBuffer(const vk::raii::CommandBuffer& commandBuffer, uint32_t imageIndex);
     void drawFrame();
 };
 

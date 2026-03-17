@@ -63,21 +63,21 @@ void VkVisualTestApp::initVulkan() {
         .initialize();
 }
 
-void VkVisualTestApp::recordCommandBuffer(const ::vk::raii::CommandBuffer& commandBuffer, uint32_t imageIndex) {
-    ::vk::CommandBufferBeginInfo beginInfo{};
+void VkVisualTestApp::recordCommandBuffer(const vk::raii::CommandBuffer& commandBuffer, uint32_t imageIndex) {
+    vk::CommandBufferBeginInfo beginInfo{};
     commandBuffer.begin(beginInfo);
 
-    ::vk::ClearValue clearColor{::vk::ClearColorValue{std::array<float, 4>{0.0f, 0.0f, 0.0f, 1.0f}}};
+    vk::ClearValue clearColor{vk::ClearColorValue{std::array<float, 4>{0.0f, 0.0f, 0.0f, 1.0f}}};
 
-    ::vk::RenderPassBeginInfo renderPassInfo{
+    vk::RenderPassBeginInfo renderPassInfo{
         *ctx_->renderPass,
         *ctx_->framebuffers[imageIndex],
         {{0, 0}, ctx_->swapchainExtent},
         1, &clearColor
     };
 
-    commandBuffer.beginRenderPass(renderPassInfo, ::vk::SubpassContents::eInline);
-    commandBuffer.bindPipeline(::vk::PipelineBindPoint::eGraphics, *ctx_->graphicsPipeline);
+    commandBuffer.beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
+    commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, *ctx_->graphicsPipeline);
     commandBuffer.draw(3, 1, 0, 0);  // Draw triangle (3 vertices)
     commandBuffer.endRenderPass();
     commandBuffer.end();
