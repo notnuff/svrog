@@ -9,7 +9,18 @@ if(CLANG_TIDY_EXE)
     set(CMAKE_CXX_CLANG_TIDY "${CLANG_TIDY_EXE}")
 endif()
 
+find_program(SLANGC_EXECUTABLE NAMES slangc)
+
+if(SLANGC_EXECUTABLE)
+    message(STATUS "slangc found: ${SLANGC_EXECUTABLE}")
+else()
+    message(WARNING "slangc not found - shader compilation will not be available")
+endif()
+
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
+
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/src/cmake")
+include(SlangShaders)
 
 add_subdirectory(src)
