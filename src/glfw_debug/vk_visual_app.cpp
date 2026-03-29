@@ -1,9 +1,13 @@
 #include "vk_visual_app.h"
 #include "renderer/vk_ctx/vk_initializer.h"
+#include "utils/file_utils.h"
+#include "renderer/shaders/shader_utils.h"
 
 #include <QLoggingCategory>
+#include <QFileInfo>
 
 #include <stdexcept>
+#include <string>
 #include <vector>
 
 namespace L {
@@ -45,6 +49,9 @@ void VkVisualTestApp::initVulkan() {
     int width, height;
     glfwGetFramebufferSize(window_, &width, &height);
 
+    std::string shaderPath = std::string(SHADER_DIR) + "/slang.spv";
+    qCInfo(L::vkVisualApp) << "Loading shader from:" << shaderPath.c_str();
+
     ctx_ = initializer
         .setAppName("VkVisualMain")
         .setEngineName("svrog")
@@ -57,8 +64,8 @@ void VkVisualTestApp::initVulkan() {
             return surface;
         })
         .setExtent(width, height)
-        .setVertexShaderCode(shaders::triangleVertexShader)
-        .setFragmentShaderCode(shaders::triangleFragmentShader)
+        .setVertexShaderPath(shaderPath)
+        .setFragmentShaderPath(shaderPath)
         .initialize();
 }
 

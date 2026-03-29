@@ -47,12 +47,3 @@ target_include_directories(${TARGET_NAME}
         PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}
 )
-
-file(GLOB SLANG_SHADER_FILES ${CMAKE_CURRENT_SOURCE_DIR}/shaders/*.slang)
-if(SLANG_SHADER_FILES)
-    add_slang_shader_target(renderer_shaders
-        SOURCES ${SLANG_SHADER_FILES}
-        OUTPUT_DIR ${CMAKE_CURRENT_BINARY_DIR}/shaders
-    )
-    add_dependencies(${TARGET_NAME} renderer_shaders)
-endif()

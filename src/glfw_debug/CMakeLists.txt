@@ -29,6 +29,7 @@ target_link_libraries(${TARGET_NAME} PRIVATE
         glfw
         renderer
         logging
+        utils
 )
 
 target_include_directories(${TARGET_NAME} PRIVATE
@@ -37,6 +38,7 @@ target_include_directories(${TARGET_NAME} PRIVATE
 
 target_compile_definitions(${TARGET_NAME} PRIVATE
         GLFW_INCLUDE_VULKAN
+        SHADER_DIR="${CMAKE_CURRENT_BINARY_DIR}/shaders"
 )
 
 message(STATUS "VkVisualMain standalone app target enabled")
