@@ -1,16 +1,7 @@
-cmake_minimum_required(VERSION 4.1)
-
-project(renderer LANGUAGES CXX)
-
-set(CMAKE_CXX_STANDARD 23)
-set(CMAKE_CXX_STANDARD_REQUIRED True)
-
 set(TARGET_NAME renderer)
 
 find_package(Vulkan REQUIRED)
 find_package(Qt6 REQUIRED COMPONENTS Core)
-
-option(BUILD_STANDALONE_GLFW_RENDERER "Build standalone GLFW-based Vulkan renderer" OFF)
 
 function(collect_sources_recursive DIR SOURCES_VAR HEADERS_VAR)
     file(GLOB LOCAL_SOURCES "${DIR}/*.cpp")
@@ -64,8 +55,4 @@ if(SLANG_SHADER_FILES)
         OUTPUT_DIR ${CMAKE_CURRENT_BINARY_DIR}/shaders
     )
     add_dependencies(${TARGET_NAME} renderer_shaders)
-endif()
-
-if(BUILD_STANDALONE_GLFW_RENDERER)
-    add_subdirectory(visual_debug)
 endif()

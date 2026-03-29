@@ -5,11 +5,18 @@ find_package(Qt6 REQUIRED COMPONENTS Core Gui Quick Qml)
 
 qt_standard_project_setup(REQUIRES 6.5)
 
+option(BUILD_STANDALONE_GLFW_RENDERER "Build standalone GLFW-based Vulkan renderer" OFF)
+
 add_subdirectory(logging)
-add_subdirectory(ui/VulkanViewport)
-add_subdirectory(ui/MainWindow)
 add_subdirectory(renderer)
-add_subdirectory(bridge)
+
+if(BUILD_STANDALONE_GLFW_RENDERER)
+    add_subdirectory(glfw_debug)
+else()
+    add_subdirectory(bridge)
+    add_subdirectory(ui/VulkanViewport)
+    add_subdirectory(ui/MainWindow)
+endif()
 
 qt_add_executable(${TARGET_NAME}
         main.cpp

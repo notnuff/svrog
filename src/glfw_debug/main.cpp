@@ -1,4 +1,4 @@
-#include "visual_debug/vk_visual_app.h"
+#include "vk_visual_app.h"
 #include "logging/colored_logger.h"
 
 #include <QLoggingCategory>

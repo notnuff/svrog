@@ -1,7 +1,6 @@
 # Visual Debug - Standalone Vulkan test application
-# Enable with: cmake -DENABLE_STANDALONE_VK_APP_BUILD=ON ..
+# Enable with: -DBUILD_STANDALONE_GLFW_RENDERER=ON
 
-find_package(Vulkan REQUIRED)
 find_package(glfw3 QUIET)
 
 if(NOT glfw3_FOUND)
@@ -25,9 +24,6 @@ add_executable(${TARGET_NAME}
         ${SOURCES}
         ${HEADERS}
 )
-
-# TODO: meh, stinky
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../../logging ${CMAKE_CURRENT_BINARY_DIR}/logging)
 
 target_link_libraries(${TARGET_NAME} PRIVATE
         glfw

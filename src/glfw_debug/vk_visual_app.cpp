@@ -1,6 +1,5 @@
-#include "visual_debug/vk_visual_app.h"
-#include "vk_ctx/vk_initializer.h"
-#include "shaders/triangle_shaders.h"
+#include "vk_visual_app.h"
+#include "renderer/vk_ctx/vk_initializer.h"
 
 #include <QLoggingCategory>
 
