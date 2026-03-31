@@ -1,4 +1,3 @@
-#define VULKAN_HPP_NO_STRUCT_CONSTRUCTORS
 #include "vk_ctx/builders/swapchain_builder.h"
 
 #include <algorithm>

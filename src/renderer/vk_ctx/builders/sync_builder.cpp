@@ -12,7 +12,9 @@ void SyncBuilder::build(VkCtx& ctx) {
     ctx.inFlightFences.reserve(VkCtx::MAX_FRAMES_IN_FLIGHT);
 
     vk::SemaphoreCreateInfo semaphoreInfo{};
-    vk::FenceCreateInfo fenceInfo{vk::FenceCreateFlagBits::eSignaled};
+    vk::FenceCreateInfo fenceInfo{
+        .flags = vk::FenceCreateFlagBits::eSignaled
+    };
 
     for (size_t i = 0; i < VkCtx::MAX_FRAMES_IN_FLIGHT; i++) {
         ctx.imageAvailableSemaphores.emplace_back(ctx.device, semaphoreInfo);

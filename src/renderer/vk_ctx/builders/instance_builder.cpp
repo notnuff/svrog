@@ -21,20 +21,19 @@ InstanceBuilder& InstanceBuilder::addExtensions(const std::vector<const char*>& 
 
 void InstanceBuilder::build(VkCtx& ctx) {
     vk::ApplicationInfo appInfo{
-        m_appName.c_str(),
-        vk::makeApiVersion(0, 1, 0, 0),
-        m_engineName.c_str(),
-        vk::makeApiVersion(0, 1, 0, 0),
-        vk::ApiVersion14
+        .pApplicationName = m_appName.c_str(),
+        .applicationVersion = vk::makeApiVersion(0, 1, 0, 0),
+        .pEngineName = m_engineName.c_str(),
+        .engineVersion = vk::makeApiVersion(0, 1, 0, 0),
+        .apiVersion = vk::ApiVersion14
     };
 
     vk::InstanceCreateInfo createInfo{
-        {},
-        &appInfo,
-        static_cast<uint32_t>(m_layers.size()),
-        m_layers.data(),
-        static_cast<uint32_t>(m_extensions.size()),
-        m_extensions.data()
+        .pApplicationInfo = &appInfo,
+        .enabledLayerCount = static_cast<uint32_t>(m_layers.size()),
+        .ppEnabledLayerNames = m_layers.data(),
+        .enabledExtensionCount = static_cast<uint32_t>(m_extensions.size()),
+        .ppEnabledExtensionNames = m_extensions.data()
     };
 
     const auto& supportedExtensions = ctx.context.enumerateInstanceExtensionProperties();

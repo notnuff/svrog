@@ -1,6 +1,6 @@
 #pragma once
 
-#include <vulkan/vulkan_raii.hpp>
+#include "common/vk_common.h"
 
 #include <optional>
 #include <vector>

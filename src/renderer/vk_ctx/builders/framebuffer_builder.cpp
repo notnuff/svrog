@@ -10,12 +10,12 @@ void FramebufferBuilder::build(VkCtx& ctx) {
         vk::ImageView attachments[] = {*ctx.swapchainImageViews[i]};
 
         vk::FramebufferCreateInfo framebufferInfo{
-            {},
-            *ctx.renderPass,
-            1, attachments,
-            ctx.swapchainExtent.width,
-            ctx.swapchainExtent.height,
-            1
+            .renderPass = *ctx.renderPass,
+            .attachmentCount = 1,
+            .pAttachments = attachments,
+            .width = ctx.swapchainExtent.width,
+            .height = ctx.swapchainExtent.height,
+            .layers = 1
         };
 
         ctx.framebuffers.emplace_back(ctx.device, framebufferInfo);

@@ -76,10 +76,11 @@ void VkVisualTestApp::recordCommandBuffer(const vk::raii::CommandBuffer& command
     vk::ClearValue clearColor{vk::ClearColorValue{std::array<float, 4>{0.0f, 0.0f, 0.0f, 1.0f}}};
 
     vk::RenderPassBeginInfo renderPassInfo{
-        *ctx_->renderPass,
-        *ctx_->framebuffers[imageIndex],
-        {{0, 0}, ctx_->swapchainExtent},
-        1, &clearColor
+        .renderPass = *ctx_->renderPass,
+        .framebuffer = *ctx_->framebuffers[imageIndex],
+        .renderArea = {{0, 0}, ctx_->swapchainExtent},
+        .clearValueCount = 1,
+        .pClearValues = &clearColor
     };
 
     commandBuffer.beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
@@ -115,9 +116,13 @@ void VkVisualTestApp::drawFrame() {
     ::vk::CommandBuffer cmdBuf = *ctx_->commandBuffers[currentFrame_];
 
     ::vk::SubmitInfo submitInfo{
-        1, waitSemaphores, waitStages,
-        1, &cmdBuf,
-        1, signalSemaphores
+        .waitSemaphoreCount = 1,
+        .pWaitSemaphores = waitSemaphores,
+        .pWaitDstStageMask = waitStages,
+        .commandBufferCount = 1,
+        .pCommandBuffers = &cmdBuf,
+        .signalSemaphoreCount = 1,
+        .pSignalSemaphores = signalSemaphores
     };
 
     ctx_->graphicsQueue.submit(submitInfo, *ctx_->inFlightFences[currentFrame_]);
@@ -125,9 +130,11 @@ void VkVisualTestApp::drawFrame() {
     // Present
     ::vk::SwapchainKHR swapchains[] = {*ctx_->swapchain};
     ::vk::PresentInfoKHR presentInfo{
-        1, signalSemaphores,
-        1, swapchains,
-        &imageIndex
+        .waitSemaphoreCount = 1,
+        .pWaitSemaphores = signalSemaphores,
+        .swapchainCount = 1,
+        .pSwapchains = swapchains,
+        .pImageIndices = &imageIndex
     };
 
     auto presentResult = ctx_->presentQueue.presentKHR(presentInfo);

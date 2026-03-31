@@ -24,15 +24,14 @@ void DebugInstanceBuilder::build(VkCtx& ctx) {
 
 void DebugInstanceBuilder::setupDebugMessenger(VkCtx& ctx) {
     vk::DebugUtilsMessengerCreateInfoEXT createInfo{
-        {},
-        vk::DebugUtilsMessageSeverityFlagBitsEXT::eVerbose |
+        .messageSeverity = vk::DebugUtilsMessageSeverityFlagBitsEXT::eVerbose |
             vk::DebugUtilsMessageSeverityFlagBitsEXT::eWarning |
             vk::DebugUtilsMessageSeverityFlagBitsEXT::eError,
-        vk::DebugUtilsMessageTypeFlagBitsEXT::eGeneral |
+        .messageType = vk::DebugUtilsMessageTypeFlagBitsEXT::eGeneral |
             vk::DebugUtilsMessageTypeFlagBitsEXT::eValidation |
             vk::DebugUtilsMessageTypeFlagBitsEXT::ePerformance,
-        debugCallback,
-        this
+        .pfnUserCallback = debugCallback,
+        .pUserData = this
     };
 
     ctx.debugMessenger = vk::raii::DebugUtilsMessengerEXT(ctx.instance, createInfo);
@@ -40,21 +39,21 @@ void DebugInstanceBuilder::setupDebugMessenger(VkCtx& ctx) {
 }
 
 VKAPI_ATTR VkBool32 VKAPI_CALL DebugInstanceBuilder::debugCallback(
-    VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
-    VkDebugUtilsMessageTypeFlagsEXT messageType,
-    const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
+    vk::DebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+    vk::DebugUtilsMessageTypeFlagsEXT messageType,
+    const vk::DebugUtilsMessengerCallbackDataEXT* pCallbackData,
     void* pUserData) {
 
     (void)messageType;
 
     const auto& log = L::vkValidationLayer;
-    if (messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT) {
+    if (messageSeverity & vk::DebugUtilsMessageSeverityFlagBitsEXT::eError) {
         qCCritical(log) << "[Vulkan Validation]" << pCallbackData->pMessage;
-    } else if (messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT) {
+    } else if (messageSeverity & vk::DebugUtilsMessageSeverityFlagBitsEXT::eWarning) {
         qCWarning(log) << "[Vulkan Validation]" << pCallbackData->pMessage;
-    } else if (messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT) {
+    } else if (messageSeverity & vk::DebugUtilsMessageSeverityFlagBitsEXT::eInfo) {
         qCInfo(log) << "[Vulkan Validation]" << pCallbackData->pMessage;
-    } else if (messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT) {
+    } else if (messageSeverity & vk::DebugUtilsMessageSeverityFlagBitsEXT::eVerbose) {
         qCDebug(log) << "[Vulkan Validation]" << pCallbackData->pMessage;
     }
 

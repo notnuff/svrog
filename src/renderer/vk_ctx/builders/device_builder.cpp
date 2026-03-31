@@ -1,4 +1,3 @@
-#define VULKAN_HPP_NO_STRUCT_CONSTRUCTORS
 #include "vk_ctx/builders/device_builder.h"
 
 #include <set>

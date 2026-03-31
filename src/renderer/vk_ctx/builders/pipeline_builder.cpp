@@ -34,75 +34,101 @@ void PipelineBuilder::build(VkCtx& ctx) {
     vk::raii::ShaderModule fragShaderModule = shaders::createShaderModule(ctx.device, fragCode);
 
     vk::PipelineShaderStageCreateInfo shaderStages[] = {
-        {{}, vk::ShaderStageFlagBits::eVertex, *vertShaderModule, "vertMain"},
-        {{}, vk::ShaderStageFlagBits::eFragment, *fragShaderModule, "fragMain"}
+        {
+            .stage = vk::ShaderStageFlagBits::eVertex,
+            .module = *vertShaderModule,
+            .pName = "vertMain"
+        },
+        {
+            .stage = vk::ShaderStageFlagBits::eFragment,
+            .module = *fragShaderModule,
+            .pName = "fragMain"
+        }
     };
 
     vk::PipelineVertexInputStateCreateInfo vertexInputInfo{};
 
     vk::PipelineInputAssemblyStateCreateInfo inputAssembly{
-        {}, vk::PrimitiveTopology::eTriangleList, vk::False
+        .topology = vk::PrimitiveTopology::eTriangleList,
+        .primitiveRestartEnable = vk::False
     };
 
     vk::Viewport viewport{
-        0.0f, 0.0f,
-        static_cast<float>(ctx.swapchainExtent.width),
-        static_cast<float>(ctx.swapchainExtent.height),
-        0.0f, 1.0f
+        .x = 0.0f,
+        .y = 0.0f,
+        .width = static_cast<float>(ctx.swapchainExtent.width),
+        .height = static_cast<float>(ctx.swapchainExtent.height),
+        .minDepth = 0.0f,
+        .maxDepth = 1.0f
     };
 
-    vk::Rect2D scissor{{0, 0}, ctx.swapchainExtent};
+    vk::Rect2D scissor{
+        .offset = {0, 0},
+        .extent = ctx.swapchainExtent
+    };
 
-    vk::PipelineViewportStateCreateInfo viewportState{{}, 1, &viewport, 1, &scissor};
+    vk::PipelineViewportStateCreateInfo viewportState{
+        .viewportCount = 1,
+        .pViewports = &viewport,
+        .scissorCount = 1,
+        .pScissors = &scissor
+    };
 
     vk::PipelineRasterizationStateCreateInfo rasterizer{
-        {}, vk::False, vk::False,
-        vk::PolygonMode::eFill,
-        vk::CullModeFlagBits::eBack,
-        vk::FrontFace::eClockwise,
-        vk::False, 0.0f, 0.0f, 0.0f, 1.0f
+        .depthClampEnable = vk::False,
+        .rasterizerDiscardEnable = vk::False,
+        .polygonMode = vk::PolygonMode::eFill,
+        .cullMode = vk::CullModeFlagBits::eBack,
+        .frontFace = vk::FrontFace::eClockwise,
+        .depthBiasEnable = vk::False,
+        .depthBiasConstantFactor = 0.0f,
+        .depthBiasClamp = 0.0f,
+        .depthBiasSlopeFactor = 0.0f,
+        .lineWidth = 1.0f
     };
 
     vk::PipelineMultisampleStateCreateInfo multisampling{
-        {}, vk::SampleCountFlagBits::e1, vk::False
+        .rasterizationSamples = vk::SampleCountFlagBits::e1,
+        .sampleShadingEnable = vk::False
     };
 
     vk::PipelineColorBlendAttachmentState colorBlendAttachment{
-        vk::False,
-        vk::BlendFactor::eOne, vk::BlendFactor::eZero, vk::BlendOp::eAdd,
-        vk::BlendFactor::eOne, vk::BlendFactor::eZero, vk::BlendOp::eAdd,
-        vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG |
-        vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA
+        .blendEnable = vk::False,
+        .srcColorBlendFactor = vk::BlendFactor::eOne,
+        .dstColorBlendFactor = vk::BlendFactor::eZero,
+        .colorBlendOp = vk::BlendOp::eAdd,
+        .srcAlphaBlendFactor = vk::BlendFactor::eOne,
+        .dstAlphaBlendFactor = vk::BlendFactor::eZero,
+        .alphaBlendOp = vk::BlendOp::eAdd,
+        .colorWriteMask = vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG |
+            vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA
     };
 
     vk::PipelineColorBlendStateCreateInfo colorBlending{
-        {}, vk::False, vk::LogicOp::eCopy,
-        1, &colorBlendAttachment
+        .logicOpEnable = vk::False,
+        .logicOp = vk::LogicOp::eCopy,
+        .attachmentCount = 1,
+        .pAttachments = &colorBlendAttachment
     };
 
     vk::PipelineLayoutCreateInfo pipelineLayoutInfo{};
     ctx.pipelineLayout = vk::raii::PipelineLayout(ctx.device, pipelineLayoutInfo);
 
     vk::GraphicsPipelineCreateInfo pipelineInfo{
-        {},
-        2, shaderStages,
-        &vertexInputInfo,
-        &inputAssembly,
-        nullptr,
-        &viewportState,
-        &rasterizer,
-        &multisampling,
-        nullptr,
-        &colorBlending,
-        nullptr,
-        *ctx.pipelineLayout,
-        *ctx.renderPass,
-        0
+        .stageCount = 2,
+        .pStages = shaderStages,
+        .pVertexInputState = &vertexInputInfo,
+        .pInputAssemblyState = &inputAssembly,
+        .pViewportState = &viewportState,
+        .pRasterizationState = &rasterizer,
+        .pMultisampleState = &multisampling,
+        .pColorBlendState = &colorBlending,
+        .layout = *ctx.pipelineLayout,
+        .renderPass = *ctx.renderPass,
+        .subpass = 0
     };
 
     ctx.graphicsPipeline = vk::raii::Pipeline(ctx.device, nullptr, pipelineInfo);
-
-    // Shader modules are automatically destroyed by RAII
 
     qCInfo(logger()) << "Graphics pipeline created";
 }
