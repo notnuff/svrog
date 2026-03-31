@@ -12,19 +12,16 @@ class PipelineBuilder : public IVkBuilder {
 public:
     PipelineBuilder& setVertexShaderPath(const std::string& path);
     PipelineBuilder& setFragmentShaderPath(const std::string& path);
-    PipelineBuilder& setVertexShaderCode(const std::vector<uint32_t>& code);
-    PipelineBuilder& setFragmentShaderCode(const std::vector<uint32_t>& code);
+    PipelineBuilder& setVertexShaderCode(const std::vector<char>& code);
+    PipelineBuilder& setFragmentShaderCode(const std::vector<char>& code);
 
     void build(VkCtx& ctx) override;
 
 private:
     std::string m_vertexShaderPath;
     std::string m_fragmentShaderPath;
-    std::vector<uint32_t> m_vertexShaderCode;
-    std::vector<uint32_t> m_fragmentShaderCode;
-
-    static std::vector<uint32_t> readShaderFile(const std::string& path);
-    static vk::raii::ShaderModule createShaderModule(const vk::raii::Device& device, const std::vector<uint32_t>& code);
+    std::vector<char> m_vertexShaderCode;
+    std::vector<char> m_fragmentShaderCode;
 };
 
 } // namespace nuff::renderer

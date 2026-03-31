@@ -41,6 +41,7 @@ add_library(${TARGET_NAME}
 target_link_libraries(${TARGET_NAME} PUBLIC
         Vulkan::Vulkan
         Qt6::Core
+        utils
 )
 
 target_include_directories(${TARGET_NAME}

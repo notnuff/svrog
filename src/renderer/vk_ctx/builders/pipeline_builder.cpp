@@ -1,7 +1,6 @@
 #include "vk_ctx/builders/pipeline_builder.h"
-
-#include <fstream>
-#include <stdexcept>
+#include "shaders/shader_utils.h"
+#include "utils/file_utils.h"
 
 namespace nuff::renderer {
 
@@ -15,50 +14,28 @@ PipelineBuilder& PipelineBuilder::setFragmentShaderPath(const std::string& path)
     return *this;
 }
 
-PipelineBuilder& PipelineBuilder::setVertexShaderCode(const std::vector<uint32_t>& code) {
+PipelineBuilder& PipelineBuilder::setVertexShaderCode(const std::vector<char>& code) {
     m_vertexShaderCode = code;
     return *this;
 }
 
-PipelineBuilder& PipelineBuilder::setFragmentShaderCode(const std::vector<uint32_t>& code) {
+PipelineBuilder& PipelineBuilder::setFragmentShaderCode(const std::vector<char>& code) {
     m_fragmentShaderCode = code;
     return *this;
 }
 
-std::vector<uint32_t> PipelineBuilder::readShaderFile(const std::string& path) {
-    std::ifstream file(path, std::ios::ate | std::ios::binary);
-    if (!file.is_open()) {
-        throw std::runtime_error("Failed to open shader file: " + path);
-    }
-
-    size_t fileSize = static_cast<size_t>(file.tellg());
-    std::vector<uint32_t> buffer(fileSize / sizeof(uint32_t));
-
-    file.seekg(0);
-    file.read(reinterpret_cast<char*>(buffer.data()), static_cast<std::streamsize>(fileSize));
-    file.close();
-
-    return buffer;
-}
-
-vk::raii::ShaderModule PipelineBuilder::createShaderModule(const vk::raii::Device& device, const std::vector<uint32_t>& code) {
-    vk::ShaderModuleCreateInfo createInfo{{}, code.size() * sizeof(uint32_t), code.data()};
-    return vk::raii::ShaderModule(device, createInfo);
-}
-
-
 void PipelineBuilder::build(VkCtx& ctx) {
-    std::vector<uint32_t> vertCode = m_vertexShaderCode.empty()
-        ? readShaderFile(m_vertexShaderPath) : m_vertexShaderCode;
-    std::vector<uint32_t> fragCode = m_fragmentShaderCode.empty()
-        ? readShaderFile(m_fragmentShaderPath) : m_fragmentShaderCode;
+    std::vector<char> vertCode = m_vertexShaderCode.empty()
+        ? utils::readFile(m_vertexShaderPath) : m_vertexShaderCode;
+    std::vector<char> fragCode = m_fragmentShaderCode.empty()
+        ? utils::readFile(m_fragmentShaderPath) : m_fragmentShaderCode;
 
-    vk::raii::ShaderModule vertShaderModule = createShaderModule(ctx.device, vertCode);
-    vk::raii::ShaderModule fragShaderModule = createShaderModule(ctx.device, fragCode);
+    vk::raii::ShaderModule vertShaderModule = shaders::createShaderModule(ctx.device, vertCode);
+    vk::raii::ShaderModule fragShaderModule = shaders::createShaderModule(ctx.device, fragCode);
 
     vk::PipelineShaderStageCreateInfo shaderStages[] = {
-        {{}, vk::ShaderStageFlagBits::eVertex, *vertShaderModule, "main"},
-        {{}, vk::ShaderStageFlagBits::eFragment, *fragShaderModule, "main"}
+        {{}, vk::ShaderStageFlagBits::eVertex, *vertShaderModule, "vertMain"},
+        {{}, vk::ShaderStageFlagBits::eFragment, *fragShaderModule, "fragMain"}
     };
 
     vk::PipelineVertexInputStateCreateInfo vertexInputInfo{};

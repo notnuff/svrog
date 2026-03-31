@@ -22,8 +22,8 @@ public:
     VkInitializer& setExtent(uint32_t width, uint32_t height);
     VkInitializer& setVertexShaderPath(const std::string& path);
     VkInitializer& setFragmentShaderPath(const std::string& path);
-    VkInitializer& setVertexShaderCode(const std::vector<uint32_t>& code);
-    VkInitializer& setFragmentShaderCode(const std::vector<uint32_t>& code);
+    VkInitializer& setVertexShaderCode(const std::vector<char>& code);
+    VkInitializer& setFragmentShaderCode(const std::vector<char>& code);
 
     std::unique_ptr<VkCtx> initialize();
 

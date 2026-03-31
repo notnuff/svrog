@@ -58,12 +58,12 @@ VkInitializer& VkInitializer::setFragmentShaderPath(const std::string& path) {
     return *this;
 }
 
-VkInitializer& VkInitializer::setVertexShaderCode(const std::vector<uint32_t>& code) {
+VkInitializer& VkInitializer::setVertexShaderCode(const std::vector<char>& code) {
     m_pipelineBuilder.setVertexShaderCode(code);
     return *this;
 }
 
-VkInitializer& VkInitializer::setFragmentShaderCode(const std::vector<uint32_t>& code) {
+VkInitializer& VkInitializer::setFragmentShaderCode(const std::vector<char>& code) {
     m_pipelineBuilder.setFragmentShaderCode(code);
     return *this;
 }

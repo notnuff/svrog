@@ -49,7 +49,7 @@ void VkVisualTestApp::initVulkan() {
     int width, height;
     glfwGetFramebufferSize(window_, &width, &height);
 
-    std::string shaderPath = std::string(SHADER_DIR) + "/slang.spv";
+    std::string shaderPath = "shaders/triangle_shader.spv";
     qCInfo(L::vkVisualApp) << "Loading shader from:" << shaderPath.c_str();
 
     ctx_ = initializer
