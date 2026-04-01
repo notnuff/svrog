@@ -12,7 +12,7 @@ static float3 triColors[3] = {
 };
 
 struct TriVertex {
-    float4 pos;
+    float4 pos : SV_Position;
     float4 color;
 };
 

@@ -46,6 +46,16 @@ void PipelineBuilder::build(VkCtx& ctx) {
         }
     };
 
+    std::vector dynamicStates = {
+        vk::DynamicState::eViewport,
+        vk::DynamicState::eScissor
+    };
+    vk::PipelineDynamicStateCreateInfo dynamicStateInfo = {
+        .dynamicStateCount = static_cast<uint32_t>(dynamicStates.size()),
+        .pDynamicStates = dynamicStates.data()
+    };
+
+    // TODO: add data transfer later
     vk::PipelineVertexInputStateCreateInfo vertexInputInfo{};
 
     vk::PipelineInputAssemblyStateCreateInfo inputAssembly{
@@ -53,6 +63,7 @@ void PipelineBuilder::build(VkCtx& ctx) {
         .primitiveRestartEnable = vk::False
     };
 
+    // TODO: split screen by using
     vk::Viewport viewport{
         .x = 0.0f,
         .y = 0.0f,
@@ -69,6 +80,7 @@ void PipelineBuilder::build(VkCtx& ctx) {
 
     vk::PipelineViewportStateCreateInfo viewportState{
         .viewportCount = 1,
+        // TODO: actual viewport should be set dynamically
         .pViewports = &viewport,
         .scissorCount = 1,
         .pScissors = &scissor
@@ -123,6 +135,7 @@ void PipelineBuilder::build(VkCtx& ctx) {
         .pRasterizationState = &rasterizer,
         .pMultisampleState = &multisampling,
         .pColorBlendState = &colorBlending,
+        // .pDynamicState = &dynamicStateInfo,
         .layout = *ctx.pipelineLayout,
         .renderPass = *ctx.renderPass,
         .subpass = 0

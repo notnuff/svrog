@@ -162,11 +162,13 @@ bool DeviceBuilder::isDeviceSuitable(vk::PhysicalDevice device, vk::SurfaceKHR s
 
     // TODO: this should be passed from the creator, just like with extensions
     auto features = device.getFeatures2<vk::PhysicalDeviceFeatures2,
+                                         vk::PhysicalDeviceVulkan11Features,
                                          vk::PhysicalDeviceVulkan13Features,
                                          vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT>();
 
     bool supportsRequiredFeatures =
-        features.get<vk::PhysicalDeviceVulkan13Features>().dynamicRendering
+        features.get<vk::PhysicalDeviceVulkan11Features>().shaderDrawParameters
+        && features.get<vk::PhysicalDeviceVulkan13Features>().dynamicRendering
         && features.get<vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT>().extendedDynamicState;
 
     return indices.isComplete() && extensionsSupported && swapchainAdequate
@@ -232,10 +234,14 @@ void DeviceBuilder::build(VkCtx& ctx) {
 
     vk::StructureChain<
         vk::PhysicalDeviceFeatures2,
+        vk::PhysicalDeviceVulkan11Features,
         vk::PhysicalDeviceVulkan13Features,
         vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT
     > featureChain{
         vk::PhysicalDeviceFeatures2{},
+        vk::PhysicalDeviceVulkan11Features{
+            .shaderDrawParameters = vk::True
+        },
         vk::PhysicalDeviceVulkan13Features{
             .dynamicRendering = vk::True
         },

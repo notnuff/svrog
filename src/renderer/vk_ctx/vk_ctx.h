@@ -55,9 +55,9 @@ struct VkCtx {
     vk::raii::CommandPool commandPool{nullptr};
     vk::raii::CommandBuffers commandBuffers{nullptr};
 
-    std::vector<vk::raii::Semaphore> imageAvailableSemaphores;
-    std::vector<vk::raii::Semaphore> renderFinishedSemaphores;
-    std::vector<vk::raii::Fence> inFlightFences;
+    std::vector<vk::raii::Semaphore> imageAvailableSemaphores;  // Per frame-in-flight
+    std::vector<vk::raii::Semaphore> renderFinishedSemaphores; // Per swapchain image
+    std::vector<vk::raii::Fence> inFlightFences;               // Per frame-in-flight
 
     static constexpr int MAX_FRAMES_IN_FLIGHT = 2;
 };

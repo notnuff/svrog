@@ -112,7 +112,7 @@ void VkVisualTestApp::drawFrame() {
     // Submit
     ::vk::Semaphore waitSemaphores[] = {*ctx_->imageAvailableSemaphores[currentFrame_]};
     ::vk::PipelineStageFlags waitStages[] = {::vk::PipelineStageFlagBits::eColorAttachmentOutput};
-    ::vk::Semaphore signalSemaphores[] = {*ctx_->renderFinishedSemaphores[currentFrame_]};
+    ::vk::Semaphore signalSemaphores[] = {*ctx_->renderFinishedSemaphores[imageIndex]};
     ::vk::CommandBuffer cmdBuf = *ctx_->commandBuffers[currentFrame_];
 
     ::vk::SubmitInfo submitInfo{
