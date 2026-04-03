@@ -26,7 +26,8 @@
       "name": "renderer-debug",
       "inherits": "debug",
       "cacheVariables": {
-        "BUILD_STANDALONE_GLFW_RENDERER": "ON"
+        "BUILD_STANDALONE_GLFW_RENDERER": "ON",
+        "ENABLE_CLANG_TIDY": "OFF"
       }
     },
     {

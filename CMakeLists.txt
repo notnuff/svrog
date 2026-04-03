@@ -2,11 +2,17 @@ cmake_minimum_required(VERSION 4.1)
 
 project(svrog LANGUAGES CXX)
 
-find_program(CLANG_TIDY_EXE NAMES clang-tidy)
+option(ENABLE_CLANG_TIDY "Enable clang-tidy static analysis" ON)
 
-if(CLANG_TIDY_EXE)
-    message(STATUS "clang-tidy found: ${CLANG_TIDY_EXE}")
-    set(CMAKE_CXX_CLANG_TIDY "${CLANG_TIDY_EXE}")
+if(ENABLE_CLANG_TIDY)
+    find_program(CLANG_TIDY_EXE NAMES clang-tidy)
+
+    if(CLANG_TIDY_EXE)
+        message(STATUS "clang-tidy found: ${CLANG_TIDY_EXE}")
+        set(CMAKE_CXX_CLANG_TIDY "${CLANG_TIDY_EXE}")
+    endif()
+else()
+    message(STATUS "clang-tidy disabled")
 endif()
 
 if(DEFINED ENV{VULKAN_SDK})
