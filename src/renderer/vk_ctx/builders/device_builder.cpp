@@ -177,7 +177,8 @@ void DeviceBuilder::build(VkCtx& ctx) {
     > reqFeatures{
         vk::PhysicalDeviceFeatures2{
             .features = {
-                .fillModeNonSolid = true,
+                .fillModeNonSolid = vk::True,
+                .wideLines = vk::True,
             }
         },
         vk::PhysicalDeviceVulkan11Features{

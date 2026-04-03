@@ -63,7 +63,7 @@ void PipelineBuilder::build(VkCtx& ctx) {
         .primitiveRestartEnable = vk::False
     };
 
-    // TODO: split screen by using
+    // TODO: split screen by using separate viewports
     vk::Viewport viewport{
         .x = 0.0f,
         .y = 0.0f,
@@ -89,14 +89,14 @@ void PipelineBuilder::build(VkCtx& ctx) {
     vk::PipelineRasterizationStateCreateInfo rasterizer{
         .depthClampEnable = vk::False,
         .rasterizerDiscardEnable = vk::False,
-        .polygonMode = vk::PolygonMode::eFill,
+        .polygonMode = vk::PolygonMode::eLine,
         .cullMode = vk::CullModeFlagBits::eBack,
         .frontFace = vk::FrontFace::eClockwise,
         .depthBiasEnable = vk::False,
         .depthBiasConstantFactor = 0.0f,
         .depthBiasClamp = 0.0f,
         .depthBiasSlopeFactor = 0.0f,
-        .lineWidth = 1.0f
+        .lineWidth = 4.0f
     };
 
     vk::PipelineMultisampleStateCreateInfo multisampling{
