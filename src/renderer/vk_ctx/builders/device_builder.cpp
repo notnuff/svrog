@@ -160,19 +160,7 @@ bool DeviceBuilder::isDeviceSuitable(vk::PhysicalDevice device, vk::SurfaceKHR s
         swapchainAdequate = !formats.empty() && !presentModes.empty();
     }
 
-    // TODO: this should be passed from the creator, just like with extensions
-    auto features = device.getFeatures2<vk::PhysicalDeviceFeatures2,
-                                         vk::PhysicalDeviceVulkan11Features,
-                                         vk::PhysicalDeviceVulkan13Features,
-                                         vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT>();
-
-    bool supportsRequiredFeatures =
-        features.get<vk::PhysicalDeviceVulkan11Features>().shaderDrawParameters
-        && features.get<vk::PhysicalDeviceVulkan13Features>().dynamicRendering
-        && features.get<vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT>().extendedDynamicState;
-
-    return indices.isComplete() && extensionsSupported && swapchainAdequate
-            && supportsRequiredFeatures;
+    return indices.isComplete() && extensionsSupported && swapchainAdequate;
 }
 
 void DeviceBuilder::build(VkCtx& ctx) {
@@ -181,12 +169,41 @@ void DeviceBuilder::build(VkCtx& ctx) {
         throw std::runtime_error("Failed to find GPUs with Vulkan support");
     }
 
-    for (const auto& device : physicalDevices) {
-        if (isDeviceSuitable(*device, *ctx.surface, m_deviceExtensions)) {
-            // TODO add device selection when we have more than one GPU
-            ctx.physicalDevice = vk::raii::PhysicalDevice(device);
-            break;
+    vk::StructureChain<
+    vk::PhysicalDeviceFeatures2,
+    vk::PhysicalDeviceVulkan11Features,
+    vk::PhysicalDeviceVulkan13Features,
+    vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT
+    > reqFeatures{
+        vk::PhysicalDeviceFeatures2{
+            .features = {
+                .fillModeNonSolid = true,
+            }
+        },
+        vk::PhysicalDeviceVulkan11Features{
+            .shaderDrawParameters = vk::True
+        },
+        vk::PhysicalDeviceVulkan13Features{
+            .dynamicRendering = vk::True
+        },
+        vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT{
+            .extendedDynamicState = vk::True
         }
+    };
+
+    for (const auto& device : physicalDevices) {
+        // TODO add device selection when we have more than one GPU
+        if (!isDeviceSuitable(*device, *ctx.surface, m_deviceExtensions)) {
+            continue;
+        }
+
+        // TODO: this should be passed from the creator, just like with extensions
+        // TODO: add mandatory and non-mandatory features enabling
+        if (!deviceHasRequiredFeatures(*device, reqFeatures)) {
+            continue;
+        }
+        ctx.physicalDevice = vk::raii::PhysicalDevice(device);
+        break;
     }
 
     if (!*ctx.physicalDevice) {
@@ -232,26 +249,8 @@ void DeviceBuilder::build(VkCtx& ctx) {
         queueCreateInfos.push_back(queueCreateInfo);
     }
 
-    vk::StructureChain<
-        vk::PhysicalDeviceFeatures2,
-        vk::PhysicalDeviceVulkan11Features,
-        vk::PhysicalDeviceVulkan13Features,
-        vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT
-    > featureChain{
-        vk::PhysicalDeviceFeatures2{},
-        vk::PhysicalDeviceVulkan11Features{
-            .shaderDrawParameters = vk::True
-        },
-        vk::PhysicalDeviceVulkan13Features{
-            .dynamicRendering = vk::True
-        },
-        vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT{
-            .extendedDynamicState = vk::True
-        }
-    };
-
     vk::DeviceCreateInfo createInfo{
-        .pNext = &featureChain.get<vk::PhysicalDeviceFeatures2>(),
+        .pNext = &reqFeatures.get<vk::PhysicalDeviceFeatures2>(),
         .queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size()),
         .pQueueCreateInfos = queueCreateInfos.data(),
         .enabledExtensionCount = static_cast<uint32_t>(m_deviceExtensions.size()),

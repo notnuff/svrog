@@ -23,9 +23,14 @@ private:
     static QueueFamilyIndices findQueueFamilies(vk::PhysicalDevice device, vk::SurfaceKHR surface);
     static bool isDeviceSuitable(vk::PhysicalDevice device, vk::SurfaceKHR surface,
                                   const std::vector<const char*>& extensions);
+
+    template <typename... Features>
+    static bool deviceHasRequiredFeatures(vk::PhysicalDevice device, const vk::StructureChain<Features...>& req);
+
     static bool checkDeviceExtensionSupport(vk::PhysicalDevice device,
-                                             const std::vector<const char*>& reqExtensions);
+                                            const std::vector<const char*>& reqExtensions);
 };
 
 } // namespace nuff::renderer
 
+#include "vk_ctx/builders/device_builder.inl"
