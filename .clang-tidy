@@ -95,4 +95,3 @@ CheckOptions:
     value: 'true'
   - key: readability-redundant-member-init.IgnoreBaseInCopyConstructors
     value: 'true'
-...
