@@ -1,5 +1,8 @@
 #pragma once
 
+#include <tuple>
+#include <type_traits>
+
 namespace nuff::renderer::detail {
 
 inline bool is_a_implies_b(const vk::Bool32* req, const vk::Bool32* sup, std::size_t count) {
@@ -31,6 +34,9 @@ namespace nuff::renderer {
 template <typename... Features>
 bool DeviceBuilder::deviceHasRequiredFeatures(const vk::PhysicalDevice device,
                                               const vk::StructureChain<Features...>& req) {
+    static_assert(std::is_same_v<std::tuple_element_t<0, std::tuple<Features...>>, vk::PhysicalDeviceFeatures2>,
+                  "first type in the features chain must be PhysicalDeviceFeatures2");
+
     auto supported = device.getFeatures2<Features...>();
     return (detail::hasAllFlags(req.template get<Features>(),
                                 supported.template get<Features>()) && ...);
