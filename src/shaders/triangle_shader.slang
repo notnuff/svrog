@@ -5,10 +5,10 @@ static float2 triScreenPositions[3] = {
     float2(-0.5, 0.5)
 };
 
-static float3 triColors[3] = {
-    float3(0.0, 0.0, 1.0),
-    float3(0.0, 1.0, 0.0),
-    float3(1.0, 0.0, 0.0)
+static float4 triColors[3] = {
+    float4(0.0, 0.0, 1.0, 0.0),
+    float4(0.0, 1.0, 0.0, 1.0),
+    float4(1.0, 0.0, 0.0, 0.0)
 };
 
 struct TriVertex {
@@ -21,7 +21,7 @@ TriVertex vertMain(uint vertexIdx : SV_VertexID) {
 
     TriVertex output;
     output.pos = float4(triScreenPositions[vertexIdx], 0.0, 1.0);
-    output.color = float4(triColors[vertexIdx], 1.0);
+    output.color = float4(triColors[vertexIdx]);
 
     return output;
 }
