@@ -62,28 +62,10 @@ void PipelineBuilder::build(VkCtx& ctx) {
         .topology = vk::PrimitiveTopology::eTriangleList,
         .primitiveRestartEnable = vk::False
     };
-
-    // TODO: split screen by using
-    vk::Viewport viewport{
-        .x = 0.0f,
-        .y = 0.0f,
-        .width = static_cast<float>(ctx.swapchainExtent.width),
-        .height = static_cast<float>(ctx.swapchainExtent.height),
-        .minDepth = 0.0f,
-        .maxDepth = 1.0f
-    };
-
-    vk::Rect2D scissor{
-        .offset = {0, 0},
-        .extent = ctx.swapchainExtent
-    };
-
+    
     vk::PipelineViewportStateCreateInfo viewportState{
         .viewportCount = 1,
-        // TODO: actual viewport should be set dynamically
-        .pViewports = &viewport,
         .scissorCount = 1,
-        .pScissors = &scissor
     };
 
     vk::PipelineRasterizationStateCreateInfo rasterizer{
@@ -136,22 +118,33 @@ void PipelineBuilder::build(VkCtx& ctx) {
     vk::PipelineLayoutCreateInfo pipelineLayoutInfo{};
     ctx.pipelineLayout = vk::raii::PipelineLayout(ctx.device, pipelineLayoutInfo);
 
-    vk::GraphicsPipelineCreateInfo pipelineInfo{
-        .stageCount = 2,
-        .pStages = shaderStages,
-        .pVertexInputState = &vertexInputInfo,
-        .pInputAssemblyState = &inputAssembly,
-        .pViewportState = &viewportState,
-        .pRasterizationState = &rasterizer,
-        .pMultisampleState = &multisampling,
-        .pColorBlendState = &colorBlending,
-        // .pDynamicState = &dynamicStateInfo,
-        .layout = *ctx.pipelineLayout,
-        .renderPass = *ctx.renderPass,
-        .subpass = 0
+    vk::StructureChain pipelineInfoChain = {
+        vk::GraphicsPipelineCreateInfo {
+            .stageCount = 2,
+            .pStages = shaderStages,
+            .pVertexInputState = &vertexInputInfo,
+            .pInputAssemblyState = &inputAssembly,
+            .pViewportState = &viewportState,
+            .pRasterizationState = &rasterizer,
+            .pMultisampleState = &multisampling,
+            .pColorBlendState = &colorBlending,
+            .pDynamicState = &dynamicStateInfo,
+            .layout = *ctx.pipelineLayout,
+            .renderPass = nullptr,
+
+        },
+        vk::PipelineRenderingCreateInfo {
+            .colorAttachmentCount = 1,
+            .pColorAttachmentFormats = &ctx.swapchainImageFormat
+        }
     };
 
-    ctx.graphicsPipeline = vk::raii::Pipeline(ctx.device, nullptr, pipelineInfo);
+
+    ctx.graphicsPipeline = vk::raii::Pipeline(
+        ctx.device,
+        nullptr,
+        pipelineInfoChain.get<vk::GraphicsPipelineCreateInfo>()
+    );
 
     qCInfo(logger()) << "Graphics pipeline created";
 }

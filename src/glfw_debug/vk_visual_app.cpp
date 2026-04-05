@@ -1,14 +1,16 @@
 #include "vk_visual_app.h"
-#include "renderer/vk_ctx/vk_initializer.h"
-#include "utils/file_utils.h"
-#include "renderer/shaders/shader_utils.h"
-
-#include <QLoggingCategory>
-#include <QFileInfo>
 
 #include <stdexcept>
 #include <string>
 #include <vector>
+
+#include <QLoggingCategory>
+#include <QFileInfo>
+
+#include "renderer/vk_ctx/vk_initializer.h"
+#include "utils/file_utils.h"
+#include "renderer/shaders/shader_utils.h"
+#include "renderer/vk_ctx/utils/vk_image_utils.h"
 
 namespace L {
 Q_LOGGING_CATEGORY(vkVisualApp, "nuff.renderer.vk.visual_app")
@@ -69,24 +71,71 @@ void VkVisualTestApp::initVulkan() {
         .initialize();
 }
 
-void VkVisualTestApp::recordCommandBuffer(const vk::raii::CommandBuffer& commandBuffer, uint32_t imageIndex) {
+void VkVisualTestApp::recordCommandBuffer(const vk::raii::CommandBuffer &commandBuffer, uint32_t imageIndex) {
     vk::CommandBufferBeginInfo beginInfo{};
     commandBuffer.begin(beginInfo);
 
+    auto preRenderBarrier = utils::createImageTransitionInfo(
+        ctx_->swapchainImages[imageIndex],
+        vk::ImageLayout::eUndefined,
+        vk::ImageLayout::eColorAttachmentOptimal,
+        {}, // srcAccessMask (no need to wait for previous operations)
+        vk::AccessFlagBits2::eColorAttachmentWrite, // dstAccessMask
+        vk::PipelineStageFlagBits2::eColorAttachmentOutput, // srcStage
+        vk::PipelineStageFlagBits2::eColorAttachmentOutput // dstStage
+    );
+    commandBuffer.pipelineBarrier2(preRenderBarrier.dependencyInfo);
+
     vk::ClearValue clearColor{vk::ClearColorValue{std::array<float, 4>{0.0f, 0.0f, 0.0f, 1.0f}}};
 
-    vk::RenderPassBeginInfo renderPassInfo{
-        .renderPass = *ctx_->renderPass,
-        .framebuffer = *ctx_->framebuffers[imageIndex],
-        .renderArea = {{0, 0}, ctx_->swapchainExtent},
-        .clearValueCount = 1,
-        .pClearValues = &clearColor
+    vk::RenderingAttachmentInfo attachmentInfo = {
+        .imageView = ctx_->swapchainImageViews[imageIndex],
+        .imageLayout = vk::ImageLayout::eColorAttachmentOptimal,
+        .loadOp = vk::AttachmentLoadOp::eClear,
+        .storeOp = vk::AttachmentStoreOp::eStore,
+        .clearValue = clearColor
     };
 
-    commandBuffer.beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
+    vk::RenderingInfo renderingInfo = {
+        .renderArea = {
+            .offset = {0, 0},
+            .extent = ctx_->swapchainExtent
+        },
+        .layerCount = 1,
+        .colorAttachmentCount = 1,
+        .pColorAttachments = &attachmentInfo
+    };
+
+    commandBuffer.beginRendering(renderingInfo);
     commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, *ctx_->graphicsPipeline);
-    commandBuffer.draw(3, 1, 0, 0);  // Draw triangle (3 vertices)
-    commandBuffer.endRenderPass();
+
+    commandBuffer.setViewport(0,
+                              vk::Viewport{
+                                  .width = static_cast<float>(ctx_->swapchainExtent.width),
+                                  .height = static_cast<float>(ctx_->swapchainExtent.height),
+                                  .maxDepth = 1.0f
+                              });
+    commandBuffer.setScissor(0,
+                             vk::Rect2D{
+                                 .extent = ctx_->swapchainExtent
+                             });
+
+    // TODO: try instanced rendering some time
+    commandBuffer.draw(3, 1, 0, 0); // Draw triangle (3 vertices)
+    commandBuffer.endRendering();
+
+
+    auto postRenderBarrier = utils::createImageTransitionInfo(
+        ctx_->swapchainImages[imageIndex],
+        vk::ImageLayout::eColorAttachmentOptimal,
+        vk::ImageLayout::ePresentSrcKHR,
+        vk::AccessFlagBits2::eColorAttachmentWrite, // srcAccessMask
+        {}, // dstAccessMask
+        vk::PipelineStageFlagBits2::eColorAttachmentOutput, // srcStage
+        vk::PipelineStageFlagBits2::eBottomOfPipe // dstStage
+    );
+    commandBuffer.pipelineBarrier2(postRenderBarrier.dependencyInfo);
+
     commandBuffer.end();
 }
 

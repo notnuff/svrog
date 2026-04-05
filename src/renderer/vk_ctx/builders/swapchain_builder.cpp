@@ -94,6 +94,7 @@ void SwapchainBuilder::build(VkCtx& ctx) {
     auto extent = chooseSwapExtent(swapchainSupport.capabilities, m_width, m_height);
 
     uint32_t imageCount = swapchainSupport.capabilities.minImageCount + 1;
+    // TODO: use MAX_FRAMES_IN_FLIGHT here too
     if (swapchainSupport.capabilities.maxImageCount > 0 &&
         imageCount > swapchainSupport.capabilities.maxImageCount) {
         imageCount = swapchainSupport.capabilities.maxImageCount;
