@@ -62,28 +62,10 @@ void PipelineBuilder::build(VkCtx& ctx) {
         .topology = vk::PrimitiveTopology::eTriangleList,
         .primitiveRestartEnable = vk::False
     };
-
-    // TODO: split screen by using
-    vk::Viewport viewport{
-        .x = 0.0f,
-        .y = 0.0f,
-        .width = static_cast<float>(ctx.swapchainExtent.width),
-        .height = static_cast<float>(ctx.swapchainExtent.height),
-        .minDepth = 0.0f,
-        .maxDepth = 1.0f
-    };
-
-    vk::Rect2D scissor{
-        .offset = {0, 0},
-        .extent = ctx.swapchainExtent
-    };
-
+    
     vk::PipelineViewportStateCreateInfo viewportState{
         .viewportCount = 1,
-        // TODO: actual viewport should be set dynamically
-        .pViewports = &viewport,
         .scissorCount = 1,
-        .pScissors = &scissor
     };
 
     vk::PipelineRasterizationStateCreateInfo rasterizer{
@@ -136,7 +118,7 @@ void PipelineBuilder::build(VkCtx& ctx) {
             .pRasterizationState = &rasterizer,
             .pMultisampleState = &multisampling,
             .pColorBlendState = &colorBlending,
-            // .pDynamicState = &dynamicStateInfo,
+            .pDynamicState = &dynamicStateInfo,
             .layout = *ctx.pipelineLayout,
             .renderPass = nullptr,
 
