@@ -169,26 +169,23 @@ void DeviceBuilder::build(VkCtx& ctx) {
         throw std::runtime_error("Failed to find GPUs with Vulkan support");
     }
 
-    vk::StructureChain<
-    vk::PhysicalDeviceFeatures2,
-    vk::PhysicalDeviceVulkan11Features,
-    vk::PhysicalDeviceVulkan13Features,
-    vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT
-    > reqFeatures{
+    vk::StructureChain reqFeatures{
         vk::PhysicalDeviceFeatures2{
             .features = {
-                .fillModeNonSolid = true,
+                .fillModeNonSolid = vk::True,
             }
         },
         vk::PhysicalDeviceVulkan11Features{
-            .shaderDrawParameters = vk::True
+            .shaderDrawParameters = vk::True,
         },
         vk::PhysicalDeviceVulkan13Features{
-            .dynamicRendering = vk::True
+            .synchronization2 = vk::True,
+            .dynamicRendering = vk::True,
+
         },
         vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT{
-            .extendedDynamicState = vk::True
-        }
+            .extendedDynamicState = vk::True,
+        },
     };
 
     for (const auto& device : physicalDevices) {

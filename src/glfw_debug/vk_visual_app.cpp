@@ -86,7 +86,7 @@ void VkVisualTestApp::recordCommandBuffer(const vk::raii::CommandBuffer &command
     );
     commandBuffer.pipelineBarrier2(preRenderBarrier.dependencyInfo);
 
-    vk::ClearValue clearColor{vk::ClearColorValue{std::array<float, 4>{0.0f, 0.0f, 0.0f, 1.0f}}};
+    vk::ClearValue clearColor{vk::ClearColorValue{std::array<float, 4>{0.0f, 0.0f, 0.0f, 0.9f}}};
 
     vk::RenderingAttachmentInfo attachmentInfo = {
         .imageView = ctx_->swapchainImageViews[imageIndex],
