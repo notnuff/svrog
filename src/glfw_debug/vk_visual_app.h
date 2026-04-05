@@ -35,6 +35,7 @@ private:
     GLFWwindow* window_ = nullptr;
     std::unique_ptr<VkCtx> ctx_;
     uint32_t currentFrame_ = 0;
+    bool framebufferResized_ = false;
 
     void initWindow();
     void initVulkan();
@@ -43,6 +44,9 @@ private:
 
     void recordCommandBuffer(const vk::raii::CommandBuffer& commandBuffer, uint32_t imageIndex);
     void drawFrame();
+    void recreateSwapchain();
+
+    static void framebufferResizeCallback(GLFWwindow* window, int width, int height);
 };
 
 } // namespace nuff::renderer

@@ -8,6 +8,9 @@
 #include <QFileInfo>
 
 #include "renderer/vk_ctx/vk_initializer.h"
+#include "renderer/vk_ctx/builders/swapchain_builder.h"
+#include "renderer/vk_ctx/builders/framebuffer_builder.h"
+#include "renderer/vk_ctx/builders/sync_builder.h"
 #include "utils/file_utils.h"
 #include "renderer/shaders/shader_utils.h"
 #include "renderer/vk_ctx/utils/vk_image_utils.h"
@@ -31,14 +34,22 @@ void VkVisualTestApp::initWindow() {
     }
 
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-    glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+    glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
 
-    window_ = glfwCreateWindow(DEFAULT_WIDTH, DEFAULT_HEIGHT, 
+    window_ = glfwCreateWindow(DEFAULT_WIDTH, DEFAULT_HEIGHT,
                                 "VkVisualMain - Triangle", nullptr, nullptr);
     if (!window_) {
         glfwTerminate();
         throw std::runtime_error("Failed to create GLFW window");
     }
+
+    glfwSetWindowUserPointer(window_, this);
+    glfwSetFramebufferSizeCallback(window_, framebufferResizeCallback);
+}
+
+void VkVisualTestApp::framebufferResizeCallback(GLFWwindow* window, int /*width*/, int /*height*/) {
+    auto* app = reinterpret_cast<VkVisualTestApp*>(glfwGetWindowUserPointer(window));
+    app->framebufferResized_ = true;
 }
 
 void VkVisualTestApp::initVulkan() {
@@ -149,6 +160,10 @@ void VkVisualTestApp::drawFrame() {
     auto [acquireResult, imageIndex] = ctx_->swapchain.acquireNextImage(
         UINT64_MAX, *ctx_->imageAvailableSemaphores[currentFrame_], nullptr);
 
+    if (acquireResult == ::vk::Result::eErrorOutOfDateKHR) {
+        recreateSwapchain();
+        return;
+    }
     if (acquireResult != ::vk::Result::eSuccess && acquireResult != ::vk::Result::eSuboptimalKHR) {
         throw std::runtime_error("Failed to acquire swapchain image");
     }
@@ -187,9 +202,42 @@ void VkVisualTestApp::drawFrame() {
     };
 
     auto presentResult = ctx_->presentQueue.presentKHR(presentInfo);
-    (void)presentResult;
+
+    if (presentResult == ::vk::Result::eErrorOutOfDateKHR
+        || presentResult == ::vk::Result::eSuboptimalKHR
+        || framebufferResized_) {
+        framebufferResized_ = false;
+        recreateSwapchain();
+    }
 
     currentFrame_ = (currentFrame_ + 1) % VkCtx::MAX_FRAMES_IN_FLIGHT;
+}
+
+void VkVisualTestApp::recreateSwapchain() {
+    int width = 0, height = 0;
+    glfwGetFramebufferSize(window_, &width, &height);
+    while (width == 0 || height == 0) {
+        glfwGetFramebufferSize(window_, &width, &height);
+        glfwWaitEvents();
+    }
+
+    ctx_->device.waitIdle();
+
+    ctx_->framebuffers.clear();
+    ctx_->swapchainImageViews.clear();
+    ctx_->swapchainImages.clear();
+
+    SwapchainBuilder swapchainBuilder;
+    swapchainBuilder.setExtent(static_cast<uint32_t>(width), static_cast<uint32_t>(height));
+    swapchainBuilder.build(*ctx_);
+
+    FramebufferBuilder framebufferBuilder;
+    framebufferBuilder.build(*ctx_);
+
+    SyncBuilder syncBuilder;
+    syncBuilder.build(*ctx_);
+
+    qCInfo(L::vkVisualApp) << "Swapchain recreated (" << width << "x" << height << ")";
 }
 
 void VkVisualTestApp::mainLoop() {
