@@ -32,10 +32,10 @@ private:
     static constexpr uint32_t DEFAULT_WIDTH = 800;
     static constexpr uint32_t DEFAULT_HEIGHT = 600;
 
-    GLFWwindow* window_ = nullptr;
-    std::unique_ptr<VkCtx> ctx_;
-    uint32_t currentFrame_ = 0;
-    bool framebufferResized_ = false;
+    GLFWwindow* m_window = nullptr;
+    std::unique_ptr<VkCtx> m_ctx;
+    uint32_t m_currentFrame = 0;
+    bool m_framebufferResized = false;
 
     void initWindow();
     void initVulkan();

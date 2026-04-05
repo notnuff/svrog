@@ -36,20 +36,20 @@ void VkVisualTestApp::initWindow() {
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
 
-    window_ = glfwCreateWindow(DEFAULT_WIDTH, DEFAULT_HEIGHT,
+    m_window = glfwCreateWindow(DEFAULT_WIDTH, DEFAULT_HEIGHT,
                                 "VkVisualMain - Triangle", nullptr, nullptr);
-    if (!window_) {
+    if (!m_window) {
         glfwTerminate();
         throw std::runtime_error("Failed to create GLFW window");
     }
 
-    glfwSetWindowUserPointer(window_, this);
-    glfwSetFramebufferSizeCallback(window_, framebufferResizeCallback);
+    glfwSetWindowUserPointer(m_window, this);
+    glfwSetFramebufferSizeCallback(m_window, framebufferResizeCallback);
 }
 
 void VkVisualTestApp::framebufferResizeCallback(GLFWwindow* window, int /*width*/, int /*height*/) {
     auto* app = reinterpret_cast<VkVisualTestApp*>(glfwGetWindowUserPointer(window));
-    app->framebufferResized_ = true;
+    app->m_framebufferResized = true;
 }
 
 void VkVisualTestApp::initVulkan() {
@@ -60,18 +60,18 @@ void VkVisualTestApp::initVulkan() {
     VkInitializer initializer;
 
     int width, height;
-    glfwGetFramebufferSize(window_, &width, &height);
+    glfwGetFramebufferSize(m_window, &width, &height);
 
     std::string shaderPath = "shaders/triangle_shader.spv";
     qCInfo(L::vkVisualApp) << "Loading shader from:" << shaderPath.c_str();
 
-    ctx_ = initializer
+    m_ctx = initializer
         .setAppName("VkVisualMain")
         .setEngineName("svrog")
         .addInstanceExtensions(extensions)
         .setSurfaceCreator([this](VkInstance instance) {
             VkSurfaceKHR surface;
-            if (glfwCreateWindowSurface(instance, window_, nullptr, &surface) != VK_SUCCESS) {
+            if (glfwCreateWindowSurface(instance, m_window, nullptr, &surface) != VK_SUCCESS) {
                 throw std::runtime_error("Failed to create window surface");
             }
             return surface;
@@ -87,7 +87,7 @@ void VkVisualTestApp::recordCommandBuffer(const vk::raii::CommandBuffer &command
     commandBuffer.begin(beginInfo);
 
     auto preRenderBarrier = utils::createImageTransitionInfo(
-        ctx_->swapchainImages[imageIndex],
+        m_ctx->swapchainImages[imageIndex],
         vk::ImageLayout::eUndefined,
         vk::ImageLayout::eColorAttachmentOptimal,
         {}, // srcAccessMask (no need to wait for previous operations)
@@ -100,7 +100,7 @@ void VkVisualTestApp::recordCommandBuffer(const vk::raii::CommandBuffer &command
     vk::ClearValue clearColor{vk::ClearColorValue{std::array<float, 4>{0.0f, 0.0f, 0.0f, 0.9f}}};
 
     vk::RenderingAttachmentInfo attachmentInfo = {
-        .imageView = ctx_->swapchainImageViews[imageIndex],
+        .imageView = m_ctx->swapchainImageViews[imageIndex],
         .imageLayout = vk::ImageLayout::eColorAttachmentOptimal,
         .loadOp = vk::AttachmentLoadOp::eClear,
         .storeOp = vk::AttachmentStoreOp::eStore,
@@ -110,7 +110,7 @@ void VkVisualTestApp::recordCommandBuffer(const vk::raii::CommandBuffer &command
     vk::RenderingInfo renderingInfo = {
         .renderArea = {
             .offset = {0, 0},
-            .extent = ctx_->swapchainExtent
+            .extent = m_ctx->swapchainExtent
         },
         .layerCount = 1,
         .colorAttachmentCount = 1,
@@ -118,17 +118,17 @@ void VkVisualTestApp::recordCommandBuffer(const vk::raii::CommandBuffer &command
     };
 
     commandBuffer.beginRendering(renderingInfo);
-    commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, *ctx_->graphicsPipeline);
+    commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, *m_ctx->graphicsPipeline);
 
     commandBuffer.setViewport(0,
                               vk::Viewport{
-                                  .width = static_cast<float>(ctx_->swapchainExtent.width),
-                                  .height = static_cast<float>(ctx_->swapchainExtent.height),
+                                  .width = static_cast<float>(m_ctx->swapchainExtent.width),
+                                  .height = static_cast<float>(m_ctx->swapchainExtent.height),
                                   .maxDepth = 1.0f
                               });
     commandBuffer.setScissor(0,
                              vk::Rect2D{
-                                 .extent = ctx_->swapchainExtent
+                                 .extent = m_ctx->swapchainExtent
                              });
 
     // TODO: try instanced rendering some time
@@ -137,7 +137,7 @@ void VkVisualTestApp::recordCommandBuffer(const vk::raii::CommandBuffer &command
 
 
     auto postRenderBarrier = utils::createImageTransitionInfo(
-        ctx_->swapchainImages[imageIndex],
+        m_ctx->swapchainImages[imageIndex],
         vk::ImageLayout::eColorAttachmentOptimal,
         vk::ImageLayout::ePresentSrcKHR,
         vk::AccessFlagBits2::eColorAttachmentWrite, // srcAccessMask
@@ -152,13 +152,13 @@ void VkVisualTestApp::recordCommandBuffer(const vk::raii::CommandBuffer &command
 
 void VkVisualTestApp::drawFrame() {
     // Wait for previous frame
-    auto waitResult = ctx_->device.waitForFences(
-        {*ctx_->inFlightFences[currentFrame_]}, vk::True, UINT64_MAX);
+    auto waitResult = m_ctx->device.waitForFences(
+        {*m_ctx->inFlightFences[m_currentFrame]}, vk::True, UINT64_MAX);
     (void)waitResult;
 
     // Acquire next image
-    auto [acquireResult, imageIndex] = ctx_->swapchain.acquireNextImage(
-        UINT64_MAX, *ctx_->imageAvailableSemaphores[currentFrame_], nullptr);
+    auto [acquireResult, imageIndex] = m_ctx->swapchain.acquireNextImage(
+        UINT64_MAX, *m_ctx->imageAvailableSemaphores[m_currentFrame], nullptr);
 
     if (acquireResult == ::vk::Result::eErrorOutOfDateKHR) {
         recreateSwapchain();
@@ -168,18 +168,18 @@ void VkVisualTestApp::drawFrame() {
         throw std::runtime_error("Failed to acquire swapchain image");
     }
 
-    ctx_->device.resetFences({*ctx_->inFlightFences[currentFrame_]});
+    m_ctx->device.resetFences({*m_ctx->inFlightFences[m_currentFrame]});
 
-    ctx_->commandBuffers[currentFrame_].reset();
-    recordCommandBuffer(ctx_->commandBuffers[currentFrame_], imageIndex);
+    m_ctx->commandBuffers[m_currentFrame].reset();
+    recordCommandBuffer(m_ctx->commandBuffers[m_currentFrame], imageIndex);
 
     // Submit
-    ::vk::Semaphore waitSemaphores[] = {*ctx_->imageAvailableSemaphores[currentFrame_]};
-    ::vk::PipelineStageFlags waitStages[] = {::vk::PipelineStageFlagBits::eColorAttachmentOutput};
-    ::vk::Semaphore signalSemaphores[] = {*ctx_->renderFinishedSemaphores[imageIndex]};
-    ::vk::CommandBuffer cmdBuf = *ctx_->commandBuffers[currentFrame_];
+    vk::Semaphore waitSemaphores[] = {*m_ctx->imageAvailableSemaphores[m_currentFrame]};
+    vk::PipelineStageFlags waitStages[] = {::vk::PipelineStageFlagBits::eColorAttachmentOutput};
+    vk::Semaphore signalSemaphores[] = {*m_ctx->renderFinishedSemaphores[imageIndex]};
+    vk::CommandBuffer cmdBuf = *m_ctx->commandBuffers[m_currentFrame];
 
-    ::vk::SubmitInfo submitInfo{
+    vk::SubmitInfo submitInfo{
         .waitSemaphoreCount = 1,
         .pWaitSemaphores = waitSemaphores,
         .pWaitDstStageMask = waitStages,
@@ -189,11 +189,11 @@ void VkVisualTestApp::drawFrame() {
         .pSignalSemaphores = signalSemaphores
     };
 
-    ctx_->graphicsQueue.submit(submitInfo, *ctx_->inFlightFences[currentFrame_]);
+    m_ctx->graphicsQueue.submit(submitInfo, *m_ctx->inFlightFences[m_currentFrame]);
 
     // Present
-    ::vk::SwapchainKHR swapchains[] = {*ctx_->swapchain};
-    ::vk::PresentInfoKHR presentInfo{
+    vk::SwapchainKHR swapchains[] = {*m_ctx->swapchain};
+    vk::PresentInfoKHR presentInfo{
         .waitSemaphoreCount = 1,
         .pWaitSemaphores = signalSemaphores,
         .swapchainCount = 1,
@@ -201,59 +201,59 @@ void VkVisualTestApp::drawFrame() {
         .pImageIndices = &imageIndex
     };
 
-    auto presentResult = ctx_->presentQueue.presentKHR(presentInfo);
+    auto presentResult = m_ctx->presentQueue.presentKHR(presentInfo);
 
     if (presentResult == ::vk::Result::eErrorOutOfDateKHR
         || presentResult == ::vk::Result::eSuboptimalKHR
-        || framebufferResized_) {
-        framebufferResized_ = false;
+        || m_framebufferResized) {
+        m_framebufferResized = false;
         recreateSwapchain();
     }
 
-    currentFrame_ = (currentFrame_ + 1) % VkCtx::MAX_FRAMES_IN_FLIGHT;
+    m_currentFrame = (m_currentFrame + 1) % VkCtx::MAX_FRAMES_IN_FLIGHT;
 }
 
 void VkVisualTestApp::recreateSwapchain() {
     int width = 0, height = 0;
-    glfwGetFramebufferSize(window_, &width, &height);
+    glfwGetFramebufferSize(m_window, &width, &height);
     while (width == 0 || height == 0) {
-        glfwGetFramebufferSize(window_, &width, &height);
+        glfwGetFramebufferSize(m_window, &width, &height);
         glfwWaitEvents();
     }
 
-    ctx_->device.waitIdle();
+    m_ctx->device.waitIdle();
 
-    ctx_->framebuffers.clear();
-    ctx_->swapchainImageViews.clear();
-    ctx_->swapchainImages.clear();
+    m_ctx->framebuffers.clear();
+    m_ctx->swapchainImageViews.clear();
+    m_ctx->swapchainImages.clear();
 
     SwapchainBuilder swapchainBuilder;
     swapchainBuilder.setExtent(static_cast<uint32_t>(width), static_cast<uint32_t>(height));
-    swapchainBuilder.build(*ctx_);
+    swapchainBuilder.build(*m_ctx);
 
     FramebufferBuilder framebufferBuilder;
-    framebufferBuilder.build(*ctx_);
+    framebufferBuilder.build(*m_ctx);
 
     SyncBuilder syncBuilder;
-    syncBuilder.build(*ctx_);
+    syncBuilder.build(*m_ctx);
 
     qCInfo(L::vkVisualApp) << "Swapchain recreated (" << width << "x" << height << ")";
 }
 
 void VkVisualTestApp::mainLoop() {
     qCInfo(L::vkVisualApp) << "Entering main loop. Close window to exit.";
-    while (!glfwWindowShouldClose(window_)) {
+    while (!glfwWindowShouldClose(m_window)) {
         glfwPollEvents();
         drawFrame();
     }
-    ctx_->device.waitIdle();
+    m_ctx->device.waitIdle();
 }
 
 void VkVisualTestApp::cleanup() {
     // RAII handles Vulkan cleanup automatically
-    ctx_.reset();
+    m_ctx.reset();
 
-    glfwDestroyWindow(window_);
+    glfwDestroyWindow(m_window);
     glfwTerminate();
     qCInfo(L::vkVisualApp) << "Cleanup complete";
 }
