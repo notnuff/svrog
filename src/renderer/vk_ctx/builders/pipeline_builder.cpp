@@ -126,22 +126,33 @@ void PipelineBuilder::build(VkCtx& ctx) {
     vk::PipelineLayoutCreateInfo pipelineLayoutInfo{};
     ctx.pipelineLayout = vk::raii::PipelineLayout(ctx.device, pipelineLayoutInfo);
 
-    vk::GraphicsPipelineCreateInfo pipelineInfo{
-        .stageCount = 2,
-        .pStages = shaderStages,
-        .pVertexInputState = &vertexInputInfo,
-        .pInputAssemblyState = &inputAssembly,
-        .pViewportState = &viewportState,
-        .pRasterizationState = &rasterizer,
-        .pMultisampleState = &multisampling,
-        .pColorBlendState = &colorBlending,
-        // .pDynamicState = &dynamicStateInfo,
-        .layout = *ctx.pipelineLayout,
-        .renderPass = *ctx.renderPass,
-        .subpass = 0
+    vk::StructureChain pipelineInfoChain = {
+        vk::GraphicsPipelineCreateInfo {
+            .stageCount = 2,
+            .pStages = shaderStages,
+            .pVertexInputState = &vertexInputInfo,
+            .pInputAssemblyState = &inputAssembly,
+            .pViewportState = &viewportState,
+            .pRasterizationState = &rasterizer,
+            .pMultisampleState = &multisampling,
+            .pColorBlendState = &colorBlending,
+            // .pDynamicState = &dynamicStateInfo,
+            .layout = *ctx.pipelineLayout,
+            .renderPass = nullptr,
+
+        },
+        vk::PipelineRenderingCreateInfo {
+            .colorAttachmentCount = 1,
+            .pColorAttachmentFormats = &ctx.swapchainImageFormat
+        }
     };
 
-    ctx.graphicsPipeline = vk::raii::Pipeline(ctx.device, nullptr, pipelineInfo);
+
+    ctx.graphicsPipeline = vk::raii::Pipeline(
+        ctx.device,
+        nullptr,
+        pipelineInfoChain.get<vk::GraphicsPipelineCreateInfo>()
+    );
 
     qCInfo(logger()) << "Graphics pipeline created";
 }
