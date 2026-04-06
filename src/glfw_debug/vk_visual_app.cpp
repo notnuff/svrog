@@ -7,13 +7,13 @@
 #include <QLoggingCategory>
 #include <QFileInfo>
 
-#include "renderer/vk_ctx/vk_initializer.h"
-#include "renderer/vk_ctx/builders/swapchain_builder.h"
-#include "renderer/vk_ctx/builders/framebuffer_builder.h"
-#include "renderer/vk_ctx/builders/sync_builder.h"
+#include "rendering/vk_ctx/vk_initializer.h"
+#include "rendering/vk_ctx/builders/swapchain_builder.h"
+#include "rendering/vk_ctx/builders/framebuffer_builder.h"
+#include "rendering/vk_ctx/builders/sync_builder.h"
 #include "utils/file_utils.h"
-#include "renderer/shaders/shader_utils.h"
-#include "renderer/vk_ctx/utils/vk_image_utils.h"
+#include "rendering/shaders/shader_utils.h"
+#include "rendering/vk_ctx/utils/vk_image_utils.h"
 
 namespace L {
 Q_LOGGING_CATEGORY(vkVisualApp, "nuff.renderer.vk.visual_app")

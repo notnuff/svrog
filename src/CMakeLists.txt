@@ -8,7 +8,7 @@ option(BUILD_STANDALONE_GLFW_RENDERER "Build standalone GLFW-based Vulkan render
 
 add_subdirectory(logging)
 add_subdirectory(utils)
-add_subdirectory(renderer)
+add_subdirectory(rendering)
 
 if(BUILD_STANDALONE_GLFW_RENDERER)
     add_subdirectory(glfw_debug)

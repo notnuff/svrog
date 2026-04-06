@@ -5,7 +5,7 @@
 #endif
 #include <GLFW/glfw3.h>
 
-#include "renderer/vk_ctx/vk_ctx.h"
+#include "rendering/vk_ctx/vk_ctx.h"
 
 #include <memory>
 
