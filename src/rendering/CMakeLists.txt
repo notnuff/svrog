@@ -5,9 +5,7 @@ find_package(Qt6 REQUIRED COMPONENTS Core)
 
 set(SOURCES "")
 set(HEADERS "")
-collect_sources_recursive(${CMAKE_CURRENT_SOURCE_DIR}/vk_ctx SOURCES HEADERS)
-collect_sources_recursive(${CMAKE_CURRENT_SOURCE_DIR}/shaders SOURCES HEADERS)
-collect_sources_recursive(${CMAKE_CURRENT_SOURCE_DIR}/utils SOURCES HEADERS)
+collect_sources_recursive(${CMAKE_CURRENT_SOURCE_DIR} SOURCES HEADERS)
 
 add_library(${TARGET_NAME}
         ${SOURCES}

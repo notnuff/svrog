@@ -13,12 +13,15 @@ set(TARGET_NAME VkVisualMain)
 
 set(SOURCES
         main.cpp
-        vk_visual_app.cpp
+        visual_app.cpp
 )
 
 set(HEADERS
-        vk_visual_app.h
+        visual_app.h
+        glfw_initializer.h
 )
+
+collect_sources_recursive(${CMAKE_CURRENT_SOURCE_DIR}/presentation SOURCES HEADERS)
 
 add_executable(${TARGET_NAME}
         ${SOURCES}
