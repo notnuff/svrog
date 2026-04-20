@@ -25,7 +25,7 @@ PipelineBuilder& PipelineBuilder::setFragmentShaderCode(const std::vector<char>&
 }
 
 void PipelineBuilder::build(CoreCtx& ctx) {
-    auto& swapchain = ctx.extension<SwapchainCtxMixin>();
+    auto& pipelineConfig = ctx.extension<PipelineConfigMixin>();
     auto& pipeline = ctx.extension<PipelineCtxMixin>();
 
     std::vector<char> vertCode = m_vertexShaderCode.empty()
@@ -138,7 +138,7 @@ void PipelineBuilder::build(CoreCtx& ctx) {
         },
         vk::PipelineRenderingCreateInfo {
             .colorAttachmentCount = 1,
-            .pColorAttachmentFormats = &swapchain.swapchainImageFormat
+            .pColorAttachmentFormats = &pipelineConfig.colorAttachmentFormat
         }
     };
 

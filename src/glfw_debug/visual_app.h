@@ -9,6 +9,7 @@
 
 #include "core/renderer/renderer.h"
 #include "core/context/ctx.h"
+#include "presentation/swapchain_render_target.h"
 
 namespace nuff::renderer {
 
@@ -36,7 +37,7 @@ private:
 
     Renderer m_renderer;
     std::unique_ptr<CoreCtx> m_ctx;
-    bool m_framebufferResized = false;
+    std::unique_ptr<SwapchainRenderTarget> m_renderTarget;
 
     void initWindow();
     void initRenderer();

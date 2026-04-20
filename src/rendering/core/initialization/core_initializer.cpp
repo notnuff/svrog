@@ -64,9 +64,6 @@ void CoreInitializer::prepareBuilders() {
         builder.setVertexShaderPath(m_vertexShaderPath);
         builder.setFragmentShaderPath(m_fragmentShaderPath);
     }
-
-    m_builders.insert_back<CommandBuilder>();
-    m_builders.insert_back<SyncBuilder>();
 }
 } // namespace nuff::renderer
 

@@ -1,26 +1,29 @@
 #pragma once
 
-#include <QObject>
 #include <common/vk_common.h>
 
-class IRenderTarget : public QObject {
+namespace nuff::renderer {
+
+class IRenderTarget {
 public:
+    virtual ~IRenderTarget() = default;
 
-    virtual ~IRenderTarget() override = default;
+    enum class FrameResult { Success, Recreate, Error };
 
-    virtual const vk::raii::CommandBuffer& getTargetCommandBuffer() = 0;
+    // Frame lifecycle
+    virtual FrameResult beginFrame() = 0;
+    virtual FrameResult endFrame() = 0;
 
-    virtual vk::raii::ImageView getTargetImageView() = 0;
-    virtual const vk::Extent2D& getTargetImageExtent() = 0;
-    virtual vk::Format getTargetImageFormat() = 0;
+    // Per-frame resources (valid between beginFrame/endFrame)
+    virtual const vk::raii::CommandBuffer& commandBuffer() const = 0;
+    virtual const vk::raii::ImageView& imageView() const = 0;
+    virtual vk::Image image() const = 0;
+    virtual vk::Extent2D extent() const = 0;
+    virtual vk::Format format() const = 0;
 
-signals:
-    // std::vector<vk::Image> swapchainImages;
-    // std::vector<vk::raii::ImageView> swapchainImageViews;
-    // vk::Format swapchainImageFormat;
-    // vk::Extent2D swapchainExtent;
-    void imageFormatChanged();
-    void imageExtentChanged();
-
+    // The layout the image should be transitioned to after rendering
+    virtual vk::ImageLayout finalLayout() const = 0;
 };
+
+} // namespace nuff::renderer
 

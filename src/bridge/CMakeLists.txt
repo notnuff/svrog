@@ -1,7 +1,7 @@
 set(TARGET_NAME bridge)
 
-set(SOURCES vulkandemorenderer.cpp)
-set(HEADERS ivulkanrenderer.h vulkandemorenderer.h)
+set(SOURCES render_engine.cpp)
+set(HEADERS render_engine.h qml_initializer.h)
 
 add_library(${TARGET_NAME}
         ${SOURCES}
@@ -10,12 +10,12 @@ add_library(${TARGET_NAME}
 
 target_link_libraries(${TARGET_NAME} PRIVATE
         Qt6::Core
+        Qt6::Quick
         Vulkan::Vulkan
+        renderer
 )
 
 target_include_directories(${TARGET_NAME}
         PUBLIC
-#        well, that's bullshit, need to use proper library include/headers.h
-        ./../
-
+        ${CMAKE_CURRENT_SOURCE_DIR}/..
 )

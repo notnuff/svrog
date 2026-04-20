@@ -1,32 +1,42 @@
 #include <QGuiApplication>
-#include <QVulkanInstance>
-#include <QtQuick/QQuickView>
 #include <QQmlApplicationEngine>
+#include <QQuickWindow>
+#include <QQuickGraphicsConfiguration>
 #include <qqmlcontext.h>
-#include <ranges>
-#include <iostream>
 
-#include "bridge/vulkandemorenderer.h"
+#include <vulkan/vulkan.h>
+
+#include "bridge/render_engine.h"
 #include "logging/colored_logger.h"
 
 int main(int argc, char **argv)
 {
-    // Install custom colored message handler
     nuff::logging::installColoredLogger();
 
     QGuiApplication app(argc, argv);
     QQuickWindow::setGraphicsApi(QSGRendererInterface::Vulkan);
 
-    QQmlApplicationEngine engine;
-    const auto demo = std::make_unique<VulkanDemoRenderer>();
+    auto renderEngine = std::make_unique<nuff::bridge::RenderEngine>();
 
-    QObject::connect(&engine, &QQmlApplicationEngine::objectCreationFailed,
+    QQmlApplicationEngine qmlEngine;
+
+    QObject::connect(&qmlEngine, &QQmlApplicationEngine::objectCreationFailed,
         &app, []() { QCoreApplication::exit(-1); },
         Qt::QueuedConnection);
-    QVulkanInstance instance;
-    engine.rootContext()->setContextProperty("demoRenderer", demo.get());
 
-    engine.addImportPath("./ui");
-    engine.loadFromModule("MainWindow", "Main");
+    qmlEngine.rootContext()->setContextProperty("renderEngine", renderEngine.get());
+
+    qmlEngine.addImportPath("./ui");
+    qmlEngine.loadFromModule("MainWindow", "Main");
+
+    for (auto* obj : qmlEngine.rootObjects()) {
+        if (auto* win = qobject_cast<QQuickWindow*>(obj)) {
+            QQuickGraphicsConfiguration config;
+            config.setDeviceExtensions({VK_KHR_EXTERNAL_MEMORY_FD_EXTENSION_NAME});
+            win->setGraphicsConfiguration(config);
+            win->show();
+        }
+    }
+
     return app.exec();
 }

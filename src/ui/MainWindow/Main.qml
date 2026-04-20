@@ -7,7 +7,7 @@ import VulkanViewport
 ApplicationWindow {
     id: root
 
-    visible: true
+    visible: false  // main.cpp shows window after graphics configuration
     width: 828
     height: 512
 
@@ -75,7 +75,7 @@ ApplicationWindow {
 
                 VulkanViewport {
                     id: viewport
-                    renderer: demoRenderer
+                    engine: renderEngine
                     anchors.fill: parent
                 }
             }

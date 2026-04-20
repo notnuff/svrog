@@ -8,7 +8,6 @@
 
 #include "glfw_initializer.h"
 #include "presentation/swapchain_builder.h"
-#include "core/builders/sync_builder.h"
 
 namespace L {
 Q_LOGGING_CATEGORY(vkVisualApp, "nuff.renderer.glfw_app")
@@ -71,12 +70,18 @@ void VkVisualTestApp::initRenderer() {
         .setFragmentShaderPath(shaderPath);
 
     m_ctx = initializer.buildCtx();
+    m_renderTarget = std::make_unique<SwapchainRenderTarget>(m_ctx.get());
+
     m_renderer.setContext(m_ctx.get());
+    m_renderer.setRenderTarget(m_renderTarget.get());
+    m_renderer.setRecreateCallback([this]() {
+        recreateSwapchain();
+    });
 }
 
 void VkVisualTestApp::framebufferResizeCallback(GLFWwindow* window, int /*width*/, int /*height*/) {
     auto* app = reinterpret_cast<VkVisualTestApp*>(glfwGetWindowUserPointer(window));
-    app->m_framebufferResized = true;
+    app->m_renderer.notifyFramebufferResized();
 }
 
 void VkVisualTestApp::recreateSwapchain() {
@@ -97,8 +102,7 @@ void VkVisualTestApp::recreateSwapchain() {
     swapchainBuilder.setExtent(static_cast<uint32_t>(width), static_cast<uint32_t>(height));
     swapchainBuilder.build(*m_ctx);
 
-    SyncBuilder syncBuilder;
-    syncBuilder.build(*m_ctx);
+    m_renderTarget->recreateResources();
 
     qCInfo(L::vkVisualApp) << "Swapchain recreated (" << width << "x" << height << ")";
 }
@@ -113,7 +117,7 @@ void VkVisualTestApp::mainLoop() {
 }
 
 void VkVisualTestApp::cleanup() {
-    // RAII handles Vulkan cleanup automatically
+    m_renderTarget.reset();
     m_ctx.reset();
 
     glfwDestroyWindow(m_window);

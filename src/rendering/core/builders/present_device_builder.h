@@ -4,11 +4,10 @@
 
 namespace nuff::renderer {
 
-// SyncBuilder - Creates semaphores and fences
-class SyncBuilder : public IVkBuilder {
+// Must run BEFORE DeviceBuilder
+class PresentDeviceBuilder : public IVkBuilder {
 public:
     void build(CoreCtx& ctx) override;
 };
 
 } // namespace nuff::renderer
-

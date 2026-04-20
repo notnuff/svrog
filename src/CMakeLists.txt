@@ -13,7 +13,7 @@ add_subdirectory(rendering)
 if(BUILD_STANDALONE_GLFW_RENDERER)
     add_subdirectory(glfw_debug)
 
-    file(GLOB GLFW_SHADER_FILES ${CMAKE_CURRENT_SOURCE_DIR}/shaders/*.slang)
+    file(GLOB GLFW_SHADER_FILES ${CMAKE_CURRENT_SOURCE_DIR}/rendering/shaders/*.slang)
     if(GLFW_SHADER_FILES)
         add_slang_shader_target(glfw_debug_shaders
             SOURCES ${GLFW_SHADER_FILES}
@@ -25,19 +25,29 @@ else()
     add_subdirectory(bridge)
     add_subdirectory(ui/VulkanViewport)
     add_subdirectory(ui/MainWindow)
+
+    qt_add_executable(${TARGET_NAME}
+            main.cpp
+    )
+
+    target_link_libraries(${TARGET_NAME} PRIVATE
+        Qt6::Core
+        Qt6::Gui
+        Qt6::Quick
+        Vulkan::Vulkan
+        logging
+        bridge
+        renderer
+        MainWindowLibplugin
+        VulkanViewportLibplugin
+    )
+
+    file(GLOB QML_SHADER_FILES ${CMAKE_CURRENT_SOURCE_DIR}/rendering/shaders/*.slang)
+    if(QML_SHADER_FILES)
+        add_slang_shader_target(qml_shaders
+            SOURCES ${QML_SHADER_FILES}
+            OUTPUT_DIR ${CMAKE_CURRENT_BINARY_DIR}/shaders
+        )
+        add_dependencies(${TARGET_NAME} qml_shaders)
+    endif()
 endif()
-
-qt_add_executable(${TARGET_NAME}
-        main.cpp
-)
-
-target_link_libraries(${TARGET_NAME} PRIVATE
-    Qt6::Core
-    Qt6::Gui
-    Qt6::Quick
-    logging
-    bridge
-    renderer
-    MainWindowLibplugin
-    VulkanViewportLibplugin
-)

@@ -16,7 +16,7 @@ public:
     void build(CoreCtx& ctx) override;
 
 private:
-    vk::Format m_preferredFormat = vk::Format::eB8G8R8A8Srgb;
+    vk::Format m_preferredFormat = vk::Format::eB8G8R8A8Unorm;
     vk::PresentModeKHR m_preferredPresentMode = vk::PresentModeKHR::eMailbox;
     uint32_t m_width = 800;
     uint32_t m_height = 600;

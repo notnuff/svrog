@@ -10,8 +10,10 @@
 #endif
 
 #include "core/initialization/build_type_initializer.h"
+#include "core/builders/present_device_builder.h"
 #include "presentation/surface_builder.h"
 #include "presentation/swapchain_builder.h"
+#include "presentation/swapchain_pipeline_config_builder.h"
 
 namespace nuff::ui::glfw {
 
@@ -37,18 +39,18 @@ protected:
     void prepareBuilders() override {
         CoreInitializerT::prepareBuilders();
 
-        // Insert SurfaceBuilder after InstanceBuilder
         if (auto link = m_builders.get<renderer::InstanceBuilder>(); link.has_value()) {
             auto& surface = link->insert_after<renderer::SurfaceBuilder>()
                 .as<renderer::SurfaceBuilder>();
             surface.setSurfaceCreator(m_surfaceCreator);
         }
 
-        // Insert SwapchainBuilder after DeviceBuilder
         if (auto link = m_builders.get<renderer::DeviceBuilder>(); link.has_value()) {
-            auto& swapchain = link->insert_after<renderer::SwapchainBuilder>()
-                .as<renderer::SwapchainBuilder>();
-            swapchain.setExtent(m_width, m_height);
+            link->insert_before<renderer::PresentDeviceBuilder>();
+
+            auto swapchainLink = link->insert_after<renderer::SwapchainBuilder>();
+            swapchainLink.as<renderer::SwapchainBuilder>().setExtent(m_width, m_height);
+            swapchainLink.insert_after<renderer::SwapchainPipelineConfigBuilder>();
         }
     }
 

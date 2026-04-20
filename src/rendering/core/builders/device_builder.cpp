@@ -9,7 +9,6 @@ std::string formatDeviceFeatures(const vk::PhysicalDeviceFeatures& features) {
     std::ostringstream oss;
     oss << "\n";
 
-    // Helper macro to print feature status
     #define PRINT_FEATURE(name) \
         oss << "  " << #name << ": " << (features.name ? "YES" : "NO") << "\n"
 
@@ -93,21 +92,6 @@ std::string formatSurfaceCapabilities(const vk::SurfaceCapabilitiesKHR& caps) {
 
 namespace nuff::renderer {
 
-DeviceBuilder& DeviceBuilder::requireGraphicsQueue(bool require) {
-    m_requireGraphics = require;
-    return *this;
-}
-
-DeviceBuilder& DeviceBuilder::requirePresentQueue(bool require) {
-    m_requirePresent = require;
-    return *this;
-}
-
-DeviceBuilder& DeviceBuilder::addDeviceExtensions(const std::vector<const char*>& extensions) {
-    m_deviceExtensions.insert(m_deviceExtensions.end(), extensions.begin(), extensions.end());
-    return *this;
-}
-
 QueueFamilyIndices DeviceBuilder::findQueueFamilies(vk::PhysicalDevice device, vk::SurfaceKHR surface) {
     QueueFamilyIndices indices;
     auto queueFamilies = device.getQueueFamilyProperties();
@@ -118,11 +102,12 @@ QueueFamilyIndices DeviceBuilder::findQueueFamilies(vk::PhysicalDevice device, v
             indices.graphicsFamily = i;
         }
 
-        if (device.getSurfaceSupportKHR(i, surface)) {
+        if (surface && device.getSurfaceSupportKHR(i, surface)) {
             indices.presentFamily = i;
         }
 
-        if (indices.isComplete()) break;
+        if (surface && indices.hasPresentSupport()) break;
+        if (!surface && indices.isComplete()) break;
         i++;
     }
 
@@ -148,25 +133,38 @@ bool DeviceBuilder::checkDeviceExtensionSupport(vk::PhysicalDevice device,
 }
 
 bool DeviceBuilder::isDeviceSuitable(vk::PhysicalDevice device, vk::SurfaceKHR surface,
-                                     const std::vector<const char *> &extensions)
+                                     const std::vector<const char *> &extensions,
+                                     bool requirePresent)
 {
     auto indices = findQueueFamilies(device, surface);
-    bool extensionsSupported = checkDeviceExtensionSupport(device, extensions);
 
-    bool swapchainAdequate = false;
-    if (extensionsSupported) {
+    if (!indices.isComplete()) return false;
+    if (requirePresent && !indices.hasPresentSupport()) return false;
+
+    bool extensionsSupported = checkDeviceExtensionSupport(device, extensions);
+    if (!extensionsSupported) return false;
+
+    if (requirePresent && surface) {
         auto formats = device.getSurfaceFormatsKHR(surface);
         auto presentModes = device.getSurfacePresentModesKHR(surface);
-        swapchainAdequate = !formats.empty() && !presentModes.empty();
+        if (formats.empty() || presentModes.empty()) return false;
     }
 
-    return indices.isComplete() && extensionsSupported && swapchainAdequate;
+    return true;
 }
 
 void DeviceBuilder::build(CoreCtx& ctx) {
-    auto& swapchain = ctx.extension<SwapchainCtxMixin>();
     auto& graphics = ctx.extension<GraphicsCtxMixin>();
-    auto& present = ctx.extension<PresentCtxMixin>();
+    auto& reqs = ctx.extension<DeviceRequirementsMixin>();
+    auto& pref = ctx.extension<PhysicalDevicePreferenceMixin>();
+
+    std::vector<const char*> deviceExtensions = reqs.additionalDeviceExtensions;
+
+    vk::SurfaceKHR surface = nullptr;
+    if (reqs.requirePresent) {
+        auto& swapchain = ctx.extension<SwapchainCtxMixin>();
+        surface = *swapchain.surface;
+    }
 
     auto physicalDevices = ctx.instance.enumeratePhysicalDevices();
     if (physicalDevices.empty()) {
@@ -185,7 +183,6 @@ void DeviceBuilder::build(CoreCtx& ctx) {
         vk::PhysicalDeviceVulkan13Features{
             .synchronization2 = vk::True,
             .dynamicRendering = vk::True,
-
         },
         vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT{
             .extendedDynamicState = vk::True,
@@ -193,13 +190,18 @@ void DeviceBuilder::build(CoreCtx& ctx) {
     };
 
     for (const auto& device : physicalDevices) {
-        // TODO add device selection when we have more than one GPU
-        if (!isDeviceSuitable(*device, *swapchain.surface, m_deviceExtensions)) {
+        if (pref.preferredVendorId && pref.preferredDeviceId) {
+            auto props = device.getProperties();
+            if (props.vendorID != *pref.preferredVendorId
+                || props.deviceID != *pref.preferredDeviceId) {
+                continue;
+            }
+        }
+
+        if (!isDeviceSuitable(*device, surface, deviceExtensions, reqs.requirePresent)) {
             continue;
         }
 
-        // TODO: this should be passed from the creator, just like with extensions
-        // TODO: add mandatory and non-mandatory features enabling
         if (!deviceHasRequiredFeatures(*device, reqFeatures)) {
             continue;
         }
@@ -226,18 +228,22 @@ void DeviceBuilder::build(CoreCtx& ctx) {
         << "Device features:"
         << formatDeviceFeatures(features).c_str();
 
-    auto capabilities = ctx.physicalDevice.getSurfaceCapabilitiesKHR(*swapchain.surface);
-    qCInfo(logger())
-        << "Surface capabilities:"
-        << formatSurfaceCapabilities(capabilities).c_str();
+    if (surface) {
+        auto capabilities = ctx.physicalDevice.getSurfaceCapabilitiesKHR(surface);
+        qCInfo(logger())
+            << "Surface capabilities:"
+            << formatSurfaceCapabilities(capabilities).c_str();
+    }
 
-    graphics.queueFamilyIndices = findQueueFamilies(ctx.physicalDevice, *swapchain.surface);
+    graphics.queueFamilyIndices = findQueueFamilies(ctx.physicalDevice, surface);
 
     std::vector<vk::DeviceQueueCreateInfo> queueCreateInfos;
     std::set<uint32_t> uniqueQueueFamilies = {
-        graphics.queueFamilyIndices.graphicsFamily.value(),
-        graphics.queueFamilyIndices.presentFamily.value()
+        graphics.queueFamilyIndices.graphicsFamily.value()
     };
+    if (reqs.requirePresent && graphics.queueFamilyIndices.presentFamily.has_value()) {
+        uniqueQueueFamilies.insert(graphics.queueFamilyIndices.presentFamily.value());
+    }
 
     float queuePriority = 1.0f;
     for (uint32_t queueFamily : uniqueQueueFamilies) {
@@ -253,13 +259,18 @@ void DeviceBuilder::build(CoreCtx& ctx) {
         .pNext = &reqFeatures.get<vk::PhysicalDeviceFeatures2>(),
         .queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size()),
         .pQueueCreateInfos = queueCreateInfos.data(),
-        .enabledExtensionCount = static_cast<uint32_t>(m_deviceExtensions.size()),
-        .ppEnabledExtensionNames = m_deviceExtensions.data()
+        .enabledExtensionCount = static_cast<uint32_t>(deviceExtensions.size()),
+        .ppEnabledExtensionNames = deviceExtensions.data()
     };
 
     ctx.device = vk::raii::Device(ctx.physicalDevice, createInfo);
     graphics.graphicsQueue = ctx.device.getQueue(graphics.queueFamilyIndices.graphicsFamily.value(), 0);
-    present.presentQueue = ctx.device.getQueue(graphics.queueFamilyIndices.presentFamily.value(), 0);
+
+    if (reqs.requirePresent && graphics.queueFamilyIndices.presentFamily.has_value()) {
+        auto& presentMixin = ctx.extension<PresentQueueMixin>();
+        presentMixin.presentQueue = ctx.device.getQueue(
+            graphics.queueFamilyIndices.presentFamily.value(), 0);
+    }
 
     qCInfo(logger()) << "Logical device created";
 }

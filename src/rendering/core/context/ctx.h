@@ -12,6 +12,10 @@ struct QueueFamilyIndices {
     std::optional<uint32_t> presentFamily;
 
     [[nodiscard]] bool isComplete() const {
+        return graphicsFamily.has_value();
+    }
+
+    [[nodiscard]] bool hasPresentSupport() const {
         return graphicsFamily.has_value() && presentFamily.has_value();
     }
 };
@@ -22,7 +26,7 @@ struct ICtxExtension {
 };
 
 struct CoreCtx {
-    // RAII context must be first member to be initialized first and destroyed last
+    // RAII context must be initialized first and destroyed last
     vk::raii::Context context;
 
     vk::raii::Instance instance{nullptr};
@@ -52,7 +56,7 @@ private:
 };
 
 struct GraphicsCtxMixin : ICtxExtension {
-    vk::Queue graphicsQueue;  // Non-owning handle, no RAII wrapper
+    vk::Queue graphicsQueue;
     QueueFamilyIndices queueFamilyIndices;
 };
 
@@ -68,19 +72,27 @@ struct DebugMessengerCtxMixin : ICtxExtension {
     vk::raii::DebugUtilsMessengerEXT debugMessenger{nullptr};
 };
 
-struct CommandCtxMixin : ICtxExtension {
-    vk::raii::CommandPool commandPool{nullptr};
-    vk::raii::CommandBuffers commandBuffers{nullptr};
+struct PipelineCtxMixin : ICtxExtension {
+    vk::raii::PipelineLayout pipelineLayout{nullptr};
+    vk::raii::Pipeline graphicsPipeline{nullptr};
 };
 
-struct PresentCtxMixin : ICtxExtension {
-    vk::Queue presentQueue;   // Non-owning handle, no RAII wrapper
+struct PipelineConfigMixin : ICtxExtension {
+    vk::Format colorAttachmentFormat = vk::Format::eB8G8R8A8Unorm;
+};
 
-    std::vector<vk::raii::Semaphore> imageAvailableSemaphores;  // Per frame-in-flight
-    std::vector<vk::raii::Semaphore> renderFinishedSemaphores; // Per swapchain image
-    std::vector<vk::raii::Fence> inFlightFences;               // Per frame-in-flight
+struct DeviceRequirementsMixin : ICtxExtension {
+    bool requirePresent = false;
+    std::vector<const char*> additionalDeviceExtensions;
+};
 
-    uint32_t maxFramesInFlight{2};
+struct PhysicalDevicePreferenceMixin : ICtxExtension {
+    std::optional<uint32_t> preferredVendorId;
+    std::optional<uint32_t> preferredDeviceId;
+};
+
+struct PresentQueueMixin : ICtxExtension {
+    vk::Queue presentQueue;
 };
 
 struct SwapchainCtxMixin : ICtxExtension {
@@ -92,20 +104,15 @@ struct SwapchainCtxMixin : ICtxExtension {
     vk::Extent2D swapchainExtent{};
 };
 
-struct PipelineCtxMixin : ICtxExtension {
-    vk::raii::PipelineLayout pipelineLayout{nullptr};
-    vk::raii::Pipeline graphicsPipeline{nullptr};
+struct SwapchainSupportDetails {
+    vk::SurfaceCapabilitiesKHR capabilities;
+    std::vector<vk::SurfaceFormatKHR> formats;
+    std::vector<vk::PresentModeKHR> presentModes;
 };
 
 struct RenderPassCtxMixin : ICtxExtension {
     vk::raii::RenderPass renderPass{nullptr};
     std::vector<vk::raii::Framebuffer> framebuffers;
-};
-
-struct SwapchainSupportDetails {
-    vk::SurfaceCapabilitiesKHR capabilities;
-    std::vector<vk::SurfaceFormatKHR> formats;
-    std::vector<vk::PresentModeKHR> presentModes;
 };
 
 } // namespace nuff::renderer

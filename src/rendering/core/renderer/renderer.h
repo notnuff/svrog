@@ -1,5 +1,6 @@
 #pragma once
 
+#include <functional>
 #include <memory>
 
 #include "core/context/ctx.h"
@@ -9,23 +10,23 @@ namespace nuff::renderer {
 
 class Renderer {
 public:
+    using RecreateCallback = std::function<void()>;
 
     void setContext(CoreCtx* ctx);
-    void setRenderTarget(std::unique_ptr<IRenderTarget>&& renderTarget);
+    void setRenderTarget(IRenderTarget* renderTarget);
+    void setRecreateCallback(RecreateCallback callback);
+
+    void notifyFramebufferResized();
 
     void stopAndWait() const;
     void drawFrame();
 
-    void recordRenderingInfo(
-        const vk::raii::CommandBuffer &commandBuffer,
-        const vk::raii::ImageView &targetImageView,
-        const vk::Extent2D &extent,
-        vk::Image swapchainImage);
-
 private:
+    void recordRendering();
+
     CoreCtx* m_ctx = nullptr;
-    std::unique_ptr<IRenderTarget> m_renderTarget;
-    uint32_t m_currentFrame = 0;
+    IRenderTarget* m_renderTarget = nullptr;
+    RecreateCallback m_recreateCallback;
     bool m_framebufferResized = false;
 };
 
