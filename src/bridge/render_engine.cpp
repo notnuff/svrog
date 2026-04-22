@@ -14,8 +14,8 @@ RenderEngine::RenderEngine(QObject* parent)
     : QObject(parent) {}
 
 RenderEngine::~RenderEngine() {
-    if (m_ctx) {
-        m_ctx->device.waitIdle();
+    if (m_initialized) {
+        m_renderer.cleanup();
     }
 }
 
@@ -49,6 +49,7 @@ void RenderEngine::initialize(uint32_t vendorId, uint32_t deviceId,
 
     m_renderer.setContext(m_ctx.get());
     m_renderer.setRenderTarget(m_renderTarget.get());
+    m_renderer.initialize();
 
     m_initialized = true;
     qCInfo(L::renderEngine) << "Engine initialized successfully";

@@ -1,33 +1,38 @@
-
-static float2 triScreenPositions[3] = {
-    float2(0.0, -0.5),
-    float2(0.5, 0.5),
-    float2(-0.5, 0.5)
+struct PushConstants {
+    float time;
 };
 
-static float4 triColors[3] = {
-    float4(0.0, 0.0, 1.0, 0.0),
-    float4(0.0, 1.0, 0.0, 1.0),
-    float4(1.0, 0.0, 0.0, 0.0)
+[[vk::push_constant]]
+PushConstants pushConstants;
+
+struct VertexInput {
+    float2 pos;
+    float3 color;
 };
 
-struct TriVertex {
+struct VertexOutput {
     float4 pos : SV_Position;
-    float4 color;
+    float3 color;
 };
 
 [shader("vertex")]
-TriVertex vertMain(uint vertexIdx : SV_VertexID) {
+VertexOutput vertMain(VertexInput input) {
+    float cosA = cos(pushConstants.time);
+    float sinA = sin(pushConstants.time);
 
-    TriVertex output;
-    output.pos = float4(triScreenPositions[vertexIdx], 0.0, 1.0);
-    output.color = float4(triColors[vertexIdx]);
+    float2 rotatedPos;
+    rotatedPos.x = input.pos.x * cosA - input.pos.y * sinA;
+    rotatedPos.y = input.pos.x * sinA + input.pos.y * cosA;
+
+    VertexOutput output;
+    output.pos = float4(rotatedPos, 0.0, 1.0);
+    output.color = input.color;
 
     return output;
 }
 
 [shader("fragment")]
-float4 fragMain(TriVertex inVert) : SV_Target
+float4 fragMain(VertexOutput inVert) : SV_Target
 {
-    return inVert.color;
+    return float4(inVert.color, 1.0);
 }

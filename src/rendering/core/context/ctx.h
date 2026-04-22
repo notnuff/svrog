@@ -7,6 +7,8 @@
 
 namespace nuff::renderer {
 
+// TODO use separate queue for TRANSFER.
+
 struct QueueFamilyIndices {
     std::optional<uint32_t> graphicsFamily;
     std::optional<uint32_t> presentFamily;

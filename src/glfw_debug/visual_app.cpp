@@ -77,6 +77,7 @@ void VkVisualTestApp::initRenderer() {
     m_renderer.setRecreateCallback([this]() {
         recreateSwapchain();
     });
+    m_renderer.initialize();
 }
 
 void VkVisualTestApp::framebufferResizeCallback(GLFWwindow* window, int /*width*/, int /*height*/) {
@@ -92,7 +93,7 @@ void VkVisualTestApp::recreateSwapchain() {
         glfwWaitEvents();
     }
 
-    m_renderer.stopAndWait();
+    m_ctx->device.waitIdle();
 
     auto& swapchain = m_ctx->extension<SwapchainCtxMixin>();
     swapchain.swapchainImageViews.clear();
@@ -113,10 +114,10 @@ void VkVisualTestApp::mainLoop() {
         glfwPollEvents();
         m_renderer.drawFrame();
     }
-    m_renderer.stopAndWait();
 }
 
 void VkVisualTestApp::cleanup() {
+    m_renderer.cleanup();
     m_renderTarget.reset();
     m_ctx.reset();
 

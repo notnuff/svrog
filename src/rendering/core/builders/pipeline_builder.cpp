@@ -1,4 +1,5 @@
 #include "core/builders/pipeline_builder.h"
+#include "primitives/vertex.h"
 #include "utils/shader_utils.h"
 #include "utils/file_utils.h"
 
@@ -58,8 +59,15 @@ void PipelineBuilder::build(CoreCtx& ctx) {
         .pDynamicStates = dynamicStates.data()
     };
 
-    // TODO: add data transfer later
-    vk::PipelineVertexInputStateCreateInfo vertexInputInfo{};
+    auto bindingDescription = Vertex::getBindingDescription();
+    auto attributeDescriptions = Vertex::getAttributeDescriptions();
+
+    vk::PipelineVertexInputStateCreateInfo vertexInputInfo{
+        .vertexBindingDescriptionCount = 1,
+        .pVertexBindingDescriptions = &bindingDescription,
+        .vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size()),
+        .pVertexAttributeDescriptions = attributeDescriptions.data()
+    };
 
     vk::PipelineInputAssemblyStateCreateInfo inputAssembly{
         .topology = vk::PrimitiveTopology::eTriangleList,
@@ -118,7 +126,16 @@ void PipelineBuilder::build(CoreCtx& ctx) {
         .pAttachments = &colorBlendAttachment
     };
 
-    vk::PipelineLayoutCreateInfo pipelineLayoutInfo{};
+    vk::PushConstantRange pushConstantRange{
+        .stageFlags = vk::ShaderStageFlagBits::eVertex,
+        .offset = 0,
+        .size = sizeof(PushConstantData)
+    };
+
+    vk::PipelineLayoutCreateInfo pipelineLayoutInfo{
+        .pushConstantRangeCount = 1,
+        .pPushConstantRanges = &pushConstantRange
+    };
     pipeline.pipelineLayout = vk::raii::PipelineLayout(ctx.device, pipelineLayoutInfo);
 
     vk::StructureChain pipelineInfoChain = {
