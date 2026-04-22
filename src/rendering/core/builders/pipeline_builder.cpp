@@ -1,5 +1,6 @@
 #include "core/builders/pipeline_builder.h"
 #include "primitives/vertex.h"
+#include "primitives/push_constants.h"
 #include "utils/shader_utils.h"
 #include "utils/file_utils.h"
 
@@ -84,7 +85,7 @@ void PipelineBuilder::build(CoreCtx& ctx) {
         .rasterizerDiscardEnable = vk::False,
         .polygonMode = vk::PolygonMode::eFill,
         .cullMode = vk::CullModeFlagBits::eBack,
-        .frontFace = vk::FrontFace::eClockwise,
+        .frontFace = vk::FrontFace::eCounterClockwise,
         .depthBiasEnable = vk::False,
         .depthBiasConstantFactor = 0.0f,
         .depthBiasClamp = 0.0f,
@@ -126,13 +127,30 @@ void PipelineBuilder::build(CoreCtx& ctx) {
         .pAttachments = &colorBlendAttachment
     };
 
+    vk::DescriptorSetLayoutBinding uboLayoutBinding{
+        .binding = 0,
+        .descriptorType = vk::DescriptorType::eUniformBuffer,
+        .descriptorCount = 1,
+        .stageFlags = vk::ShaderStageFlagBits::eVertex
+    };
+
+    vk::DescriptorSetLayoutCreateInfo layoutInfo{
+        .bindingCount = 1,
+        .pBindings = &uboLayoutBinding
+    };
+    pipeline.descriptorSetLayout = vk::raii::DescriptorSetLayout(ctx.device, layoutInfo);
+
+    vk::DescriptorSetLayout setLayout = *pipeline.descriptorSetLayout;
+
     vk::PushConstantRange pushConstantRange{
-        .stageFlags = vk::ShaderStageFlagBits::eVertex,
+        .stageFlags = vk::ShaderStageFlagBits::eFragment,
         .offset = 0,
-        .size = sizeof(PushConstantData)
+        .size = sizeof(TimePushConstantData)
     };
 
     vk::PipelineLayoutCreateInfo pipelineLayoutInfo{
+        .setLayoutCount = 1,
+        .pSetLayouts = &setLayout,
         .pushConstantRangeCount = 1,
         .pPushConstantRanges = &pushConstantRange
     };

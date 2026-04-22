@@ -1,10 +1,10 @@
 #pragma once
 
 #include "i_render_target.h"
+#include "frame_resources.h"
 #include "core/context/ctx.h"
 
 namespace nuff::renderer {
-
 
 class OffscreenRenderTarget : public IRenderTarget {
 public:
@@ -24,6 +24,15 @@ public:
     vk::Extent2D extent() const override;
     vk::Format format() const override;
     vk::ImageLayout finalLayout() const override;
+
+    uint32_t currentFrameIndex() const override;
+    uint32_t framesInFlight() const override;
+
+    void initFrameResources(const vk::raii::DescriptorSetLayout& layout,
+                             vk::DeviceSize uboSize) override;
+    void cleanupFrameResources() override;
+    vk::DescriptorSet currentDescriptorSet() const override;
+    void* currentUniformBufferMapping() const override;
 
     VkImage nativeImage() const { return *m_image; }
     bool isExportable() const { return m_exportable; }
@@ -48,6 +57,8 @@ private:
     vk::raii::CommandPool m_commandPool{nullptr};
     vk::raii::CommandBuffers m_commandBuffers{nullptr};
     vk::raii::Fence m_fence{nullptr};
+
+    FrameResources m_frameResources;
 };
 
 } // namespace nuff::renderer

@@ -14,6 +14,9 @@ void SwapchainRenderTarget::createResources() {
     auto& graphics = m_ctx->extension<GraphicsCtxMixin>();
     auto& swapchain = m_ctx->extension<SwapchainCtxMixin>();
 
+    m_commandBuffers = nullptr;
+    m_commandPool = nullptr;
+
     vk::CommandPoolCreateInfo poolInfo{
         .flags = vk::CommandPoolCreateFlagBits::eResetCommandBuffer,
         .queueFamilyIndex = graphics.queueFamilyIndices.graphicsFamily.value()
@@ -140,6 +143,31 @@ vk::Format SwapchainRenderTarget::format() const {
 
 vk::ImageLayout SwapchainRenderTarget::finalLayout() const {
     return vk::ImageLayout::ePresentSrcKHR;
+}
+
+uint32_t SwapchainRenderTarget::currentFrameIndex() const {
+    return m_currentFrame;
+}
+
+uint32_t SwapchainRenderTarget::framesInFlight() const {
+    return m_maxFramesInFlight;
+}
+
+void SwapchainRenderTarget::initFrameResources(const vk::raii::DescriptorSetLayout& layout,
+                                                 vk::DeviceSize uboSize) {
+    m_frameResources.init(*m_ctx, layout, uboSize, m_maxFramesInFlight);
+}
+
+void SwapchainRenderTarget::cleanupFrameResources() {
+    m_frameResources.cleanup(*m_ctx);
+}
+
+vk::DescriptorSet SwapchainRenderTarget::currentDescriptorSet() const {
+    return m_frameResources.descriptorSet(m_currentFrame);
+}
+
+void* SwapchainRenderTarget::currentUniformBufferMapping() const {
+    return m_frameResources.uniformBufferMapping(m_currentFrame);
 }
 
 } // namespace nuff::renderer

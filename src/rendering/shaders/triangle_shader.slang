@@ -1,13 +1,15 @@
-struct PushConstants {
-    float time;
+struct UniformBufferObject {
+    float4x4 model;
+    float4x4 view;
+    float4x4 proj;
 };
 
-[[vk::push_constant]]
-PushConstants pushConstants;
+[[vk::binding(0, 0)]]
+ConstantBuffer<UniformBufferObject> ubo;
 
 struct VertexInput {
-    float2 pos;
-    float3 color;
+    [[vk::location(0)]] float2 pos;
+    [[vk::location(1)]] float3 color;
 };
 
 struct VertexOutput {
@@ -17,17 +19,9 @@ struct VertexOutput {
 
 [shader("vertex")]
 VertexOutput vertMain(VertexInput input) {
-    float cosA = cos(pushConstants.time);
-    float sinA = sin(pushConstants.time);
-
-    float2 rotatedPos;
-    rotatedPos.x = input.pos.x * cosA - input.pos.y * sinA;
-    rotatedPos.y = input.pos.x * sinA + input.pos.y * cosA;
-
     VertexOutput output;
-    output.pos = float4(rotatedPos, 0.0, 1.0);
+    output.pos = mul(ubo.proj, mul(ubo.view, mul(ubo.model, float4(input.pos, 0.0, 1.0))));
     output.color = input.color;
-
     return output;
 }
 

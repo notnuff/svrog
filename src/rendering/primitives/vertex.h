@@ -37,8 +37,4 @@ struct Vertex {
     }
 };
 
-struct PushConstantData {
-    float time = 0.0f;
-};
-
 } // namespace nuff::renderer

@@ -167,5 +167,30 @@ vk::ImageLayout OffscreenRenderTarget::finalLayout() const {
     return vk::ImageLayout::eShaderReadOnlyOptimal;
 }
 
+uint32_t OffscreenRenderTarget::currentFrameIndex() const {
+    return 0;
+}
+
+uint32_t OffscreenRenderTarget::framesInFlight() const {
+    return 1;
+}
+
+void OffscreenRenderTarget::initFrameResources(const vk::raii::DescriptorSetLayout& layout,
+                                                 vk::DeviceSize uboSize) {
+    m_frameResources.init(*m_ctx, layout, uboSize, 1);
+}
+
+void OffscreenRenderTarget::cleanupFrameResources() {
+    m_frameResources.cleanup(*m_ctx);
+}
+
+vk::DescriptorSet OffscreenRenderTarget::currentDescriptorSet() const {
+    return m_frameResources.descriptorSet(0);
+}
+
+void* OffscreenRenderTarget::currentUniformBufferMapping() const {
+    return m_frameResources.uniformBufferMapping(0);
+}
+
 } // namespace nuff::renderer
 

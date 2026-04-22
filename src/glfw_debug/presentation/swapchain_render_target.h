@@ -1,6 +1,7 @@
 #pragma once
 
 #include <presentation/i_render_target.h>
+#include <presentation/frame_resources.h>
 #include <core/context/ctx.h>
 
 namespace nuff::renderer {
@@ -22,6 +23,15 @@ public:
     vk::Format format() const override;
     vk::ImageLayout finalLayout() const override;
 
+    uint32_t currentFrameIndex() const override;
+    uint32_t framesInFlight() const override;
+
+    void initFrameResources(const vk::raii::DescriptorSetLayout& layout,
+                             vk::DeviceSize uboSize) override;
+    void cleanupFrameResources() override;
+    vk::DescriptorSet currentDescriptorSet() const override;
+    void* currentUniformBufferMapping() const override;
+
 private:
     void createResources();
 
@@ -35,6 +45,8 @@ private:
     std::vector<vk::raii::Semaphore> m_imageAvailableSemaphores;
     std::vector<vk::raii::Semaphore> m_renderFinishedSemaphores;
     std::vector<vk::raii::Fence> m_inFlightFences;
+
+    FrameResources m_frameResources;
 };
 
 } // namespace nuff::renderer

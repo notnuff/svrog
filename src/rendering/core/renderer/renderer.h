@@ -31,6 +31,7 @@ private:
     void recordRendering();
     void uploadVertices(const std::vector<Vertex>& vertices);
     void uploadIndices(const std::vector<uint32_t>& indices);
+    void updateUniformBuffer();
 
     CoreCtx* m_ctx = nullptr;
     IRenderTarget* m_renderTarget = nullptr;

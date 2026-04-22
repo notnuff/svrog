@@ -23,6 +23,17 @@ public:
 
     // The layout the image should be transitioned to after rendering
     virtual vk::ImageLayout finalLayout() const = 0;
+
+    // Frame indexing
+    virtual uint32_t currentFrameIndex() const = 0;
+    virtual uint32_t framesInFlight() const = 0;
+
+    // Per-frame descriptor resources
+    virtual void initFrameResources(const vk::raii::DescriptorSetLayout& layout,
+                                     vk::DeviceSize uboSize) = 0;
+    virtual void cleanupFrameResources() = 0;
+    virtual vk::DescriptorSet currentDescriptorSet() const = 0;
+    virtual void* currentUniformBufferMapping() const = 0;
 };
 
 } // namespace nuff::renderer

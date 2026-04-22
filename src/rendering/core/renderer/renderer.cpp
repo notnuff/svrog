@@ -1,8 +1,13 @@
 #include "renderer.h"
 
+#include "primitives/push_constants.h"
+#include "primitives/uniform_buffer_object.h"
 #include "utils/image_utils.h"
 
 #include <cstring>
+
+#define GLM_FORCE_RADIANS
+#include <glm/gtc/matrix_transform.hpp>
 
 namespace nuff::renderer {
 
@@ -71,6 +76,22 @@ void Renderer::uploadIndices(const std::vector<uint32_t>& indices) {
     m_memoryManager->copyBuffer(*staging.buffer, *m_indexBuffer, bufferSize);
 }
 
+void Renderer::updateUniformBuffer() {
+    auto now = std::chrono::steady_clock::now();
+    float elapsed = std::chrono::duration<float>(now - m_startTime).count();
+
+    auto extent = m_renderTarget->extent();
+    float aspect = static_cast<float>(extent.width) / static_cast<float>(extent.height);
+
+    UniformBufferObject ubo{};
+    ubo.model = glm::rotate(glm::mat4(1.0f), elapsed * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+    ubo.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+    ubo.proj = glm::perspective(glm::radians(45.0f), aspect, 0.1f, 10.0f);
+    ubo.proj[1][1] *= -1; // flip Y for Vulkan
+
+    std::memcpy(m_renderTarget->currentUniformBufferMapping(), &ubo, sizeof(ubo));
+}
+
 void Renderer::initialize() {
     uploadVertices({
         {{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}},
@@ -83,10 +104,14 @@ void Renderer::initialize() {
         0, 1, 2,
         2, 3, 0
     });
+
+    auto& pipeline = m_ctx->extension<PipelineCtxMixin>();
+    m_renderTarget->initFrameResources(pipeline.descriptorSetLayout, sizeof(UniformBufferObject));
 }
 
 void Renderer::cleanup() {
     m_ctx->device.waitIdle();
+    m_renderTarget->cleanupFrameResources();
     m_vertexBuffer = nullptr;
     m_vertexBufferMemory = nullptr;
     m_vertexCount = 0;
@@ -162,12 +187,17 @@ void Renderer::recordRendering() {
     });
     cmd.setScissor(0, vk::Rect2D{.extent = targetExtent});
 
+    updateUniformBuffer();
+    cmd.bindDescriptorSets(vk::PipelineBindPoint::eGraphics,
+                           *pipeline.pipelineLayout, 0,
+                           m_renderTarget->currentDescriptorSet(), nullptr);
+
     auto now = std::chrono::steady_clock::now();
     float elapsed = std::chrono::duration<float>(now - m_startTime).count();
-    PushConstantData pushData{.time = elapsed};
-    cmd.pushConstants<PushConstantData>(*pipeline.pipelineLayout,
-                                        vk::ShaderStageFlagBits::eVertex,
-                                        0, pushData);
+    TimePushConstantData pushData{.time = elapsed};
+    cmd.pushConstants<TimePushConstantData>(*pipeline.pipelineLayout,
+                                            vk::ShaderStageFlagBits::eFragment,
+                                            0, pushData);
 
     vk::Buffer vertexBuffers[] = {*m_vertexBuffer};
     vk::DeviceSize offsets[] = {0};
