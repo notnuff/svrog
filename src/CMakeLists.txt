@@ -10,6 +10,10 @@ add_subdirectory(logging)
 add_subdirectory(utils)
 add_subdirectory(rendering)
 
+file(GLOB TEXTURE_FILES ${CMAKE_CURRENT_SOURCE_DIR}/rendering/textures/*.jpeg
+                        ${CMAKE_CURRENT_SOURCE_DIR}/rendering/textures/*.png
+                        ${CMAKE_CURRENT_SOURCE_DIR}/rendering/textures/*.jpg)
+
 if(BUILD_STANDALONE_GLFW_RENDERER)
     add_subdirectory(glfw_debug)
 
@@ -20,6 +24,10 @@ if(BUILD_STANDALONE_GLFW_RENDERER)
             OUTPUT_DIR ${CMAKE_CURRENT_BINARY_DIR}/glfw_debug/shaders
         )
         add_dependencies(VkVisualMain glfw_debug_shaders)
+    endif()
+
+    if(TEXTURE_FILES)
+        file(COPY ${TEXTURE_FILES} DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/glfw_debug/textures)
     endif()
 else()
     add_subdirectory(bridge)
@@ -49,5 +57,9 @@ else()
             OUTPUT_DIR ${CMAKE_CURRENT_BINARY_DIR}/shaders
         )
         add_dependencies(${TARGET_NAME} qml_shaders)
+    endif()
+
+    if(TEXTURE_FILES)
+        file(COPY ${TEXTURE_FILES} DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/textures)
     endif()
 endif()

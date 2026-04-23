@@ -1,7 +1,7 @@
 set(TARGET_NAME renderer)
 
 find_package(Vulkan REQUIRED)
-find_package(Qt6 REQUIRED COMPONENTS Core)
+find_package(Qt6 REQUIRED COMPONENTS Core Gui)
 find_package(glm REQUIRED)
 
 set(SOURCES "")
@@ -16,6 +16,7 @@ add_library(${TARGET_NAME}
 target_link_libraries(${TARGET_NAME} PUBLIC
         Vulkan::Vulkan
         Qt6::Core
+        Qt6::Gui
         glm::glm
         utils
 )

@@ -47,8 +47,12 @@ void RenderEngine::initialize(uint32_t vendorId, uint32_t deviceId,
         vk::Format::eB8G8R8A8Unorm,
         true /* exportable */);
 
+    std::string texturePath = (QCoreApplication::applicationDirPath()
+        + "/textures/test.jpeg").toStdString();
+
     m_renderer.setContext(m_ctx.get());
     m_renderer.setRenderTarget(m_renderTarget.get());
+    m_renderer.setTexturePath(texturePath);
     m_renderer.initialize();
 
     m_initialized = true;

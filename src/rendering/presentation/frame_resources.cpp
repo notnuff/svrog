@@ -5,7 +5,8 @@ namespace nuff::renderer {
 void FrameResources::init(CoreCtx& ctx,
                            const vk::raii::DescriptorSetLayout& layout,
                            vk::DeviceSize uboSize,
-                           uint32_t frameCount) {
+                           uint32_t frameCount,
+                           const vk::DescriptorImageInfo* textureInfo) {
     m_uboSize = uboSize;
 
     MemoryManager memMgr(ctx);
@@ -22,15 +23,24 @@ void FrameResources::init(CoreCtx& ctx,
         m_frames[i].mappedMemory = m_frames[i].uniformBufferMemory.mapMemory(0, uboSize);
     }
 
-    vk::DescriptorPoolSize poolSize{
-        .type = vk::DescriptorType::eUniformBuffer,
-        .descriptorCount = frameCount
+    std::vector<vk::DescriptorPoolSize> poolSizes = {
+        {
+            .type = vk::DescriptorType::eUniformBuffer,
+            .descriptorCount = frameCount
+        }
     };
+
+    if (textureInfo) {
+        poolSizes.push_back({
+            .type = vk::DescriptorType::eCombinedImageSampler,
+            .descriptorCount = frameCount
+        });
+    }
 
     vk::DescriptorPoolCreateInfo poolInfo{
         .maxSets = frameCount,
-        .poolSizeCount = 1,
-        .pPoolSizes = &poolSize
+        .poolSizeCount = static_cast<uint32_t>(poolSizes.size()),
+        .pPoolSizes = poolSizes.data()
     };
     m_descriptorPool = vk::raii::DescriptorPool(ctx.device, poolInfo);
 
@@ -55,15 +65,29 @@ void FrameResources::init(CoreCtx& ctx,
             .range = uboSize
         };
 
-        vk::WriteDescriptorSet descriptorWrite{
+        std::vector<vk::WriteDescriptorSet> writes;
+
+        writes.push_back({
             .dstSet = *m_descriptorSets[i],
             .dstBinding = 0,
             .dstArrayElement = 0,
             .descriptorCount = 1,
             .descriptorType = vk::DescriptorType::eUniformBuffer,
             .pBufferInfo = &bufferInfo
-        };
-        ctx.device.updateDescriptorSets(descriptorWrite, nullptr);
+        });
+
+        if (textureInfo) {
+            writes.push_back({
+                .dstSet = *m_descriptorSets[i],
+                .dstBinding = 1,
+                .dstArrayElement = 0,
+                .descriptorCount = 1,
+                .descriptorType = vk::DescriptorType::eCombinedImageSampler,
+                .pImageInfo = textureInfo
+            });
+        }
+
+        ctx.device.updateDescriptorSets(writes, nullptr);
     }
 }
 

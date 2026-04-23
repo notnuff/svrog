@@ -154,8 +154,9 @@ uint32_t SwapchainRenderTarget::framesInFlight() const {
 }
 
 void SwapchainRenderTarget::initFrameResources(const vk::raii::DescriptorSetLayout& layout,
-                                                 vk::DeviceSize uboSize) {
-    m_frameResources.init(*m_ctx, layout, uboSize, m_maxFramesInFlight);
+                                                 vk::DeviceSize uboSize,
+                                                 const vk::DescriptorImageInfo* textureInfo) {
+    m_frameResources.init(*m_ctx, layout, uboSize, m_maxFramesInFlight, textureInfo);
 }
 
 void SwapchainRenderTarget::cleanupFrameResources() {

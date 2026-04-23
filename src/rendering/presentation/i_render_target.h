@@ -30,7 +30,8 @@ public:
 
     // Per-frame descriptor resources
     virtual void initFrameResources(const vk::raii::DescriptorSetLayout& layout,
-                                     vk::DeviceSize uboSize) = 0;
+                                     vk::DeviceSize uboSize,
+                                     const vk::DescriptorImageInfo* textureInfo = nullptr) = 0;
     virtual void cleanupFrameResources() = 0;
     virtual vk::DescriptorSet currentDescriptorSet() const = 0;
     virtual void* currentUniformBufferMapping() const = 0;

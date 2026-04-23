@@ -24,56 +24,12 @@ void Renderer::setRecreateCallback(RecreateCallback callback) {
     m_recreateCallback = std::move(callback);
 }
 
+void Renderer::setTexturePath(const std::string& path) {
+    m_texturePath = path;
+}
+
 void Renderer::notifyFramebufferResized() {
     m_framebufferResized = true;
-}
-
-void Renderer::uploadVertices(const std::vector<Vertex>& vertices) {
-    vk::DeviceSize bufferSize = sizeof(Vertex) * vertices.size();
-    m_vertexCount = static_cast<uint32_t>(vertices.size());
-
-    auto staging = m_memoryManager->createBuffer(
-        bufferSize,
-        vk::BufferUsageFlagBits::eTransferSrc,
-        vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent);
-
-    void* data = staging.memory.mapMemory(0, bufferSize);
-    std::memcpy(data, vertices.data(), static_cast<size_t>(bufferSize));
-    staging.memory.unmapMemory();
-
-    auto vertexBuf = m_memoryManager->createBuffer(
-        bufferSize,
-        vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eVertexBuffer,
-        vk::MemoryPropertyFlagBits::eDeviceLocal);
-
-    m_vertexBuffer = std::move(vertexBuf.buffer);
-    m_vertexBufferMemory = std::move(vertexBuf.memory);
-
-    m_memoryManager->copyBuffer(*staging.buffer, *m_vertexBuffer, bufferSize);
-}
-
-void Renderer::uploadIndices(const std::vector<uint32_t>& indices) {
-    vk::DeviceSize bufferSize = sizeof(uint32_t) * indices.size();
-    m_indexCount = static_cast<uint32_t>(indices.size());
-
-    auto staging = m_memoryManager->createBuffer(
-        bufferSize,
-        vk::BufferUsageFlagBits::eTransferSrc,
-        vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent);
-
-    void* data = staging.memory.mapMemory(0, bufferSize);
-    std::memcpy(data, indices.data(), static_cast<size_t>(bufferSize));
-    staging.memory.unmapMemory();
-
-    auto indexBuf = m_memoryManager->createBuffer(
-        bufferSize,
-        vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eIndexBuffer,
-        vk::MemoryPropertyFlagBits::eDeviceLocal);
-
-    m_indexBuffer = std::move(indexBuf.buffer);
-    m_indexBufferMemory = std::move(indexBuf.memory);
-
-    m_memoryManager->copyBuffer(*staging.buffer, *m_indexBuffer, bufferSize);
 }
 
 void Renderer::updateUniformBuffer() {
@@ -93,31 +49,32 @@ void Renderer::updateUniformBuffer() {
 }
 
 void Renderer::initialize() {
-    uploadVertices({
-        {{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}},
-        {{ 0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}},
-        {{ 0.5f,  0.5f}, {0.0f, 0.0f, 1.0f}},
-        {{-0.5f,  0.5f}, {1.0f, 1.0f, 1.0f}},
+    m_mesh.uploadVertices(*m_memoryManager, {
+        {{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
+        {{ 0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f}},
+        {{ 0.5f,  0.5f}, {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f}},
+        {{-0.5f,  0.5f}, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f}},
     });
 
-    uploadIndices({
+    m_mesh.uploadIndices(*m_memoryManager, {
         0, 1, 2,
         2, 3, 0
     });
 
+    m_texture.loadFromFile(*m_ctx, *m_memoryManager, m_texturePath);
+    auto texDescInfo = m_texture.descriptorInfo();
+
     auto& pipeline = m_ctx->extension<PipelineCtxMixin>();
-    m_renderTarget->initFrameResources(pipeline.descriptorSetLayout, sizeof(UniformBufferObject));
+    m_renderTarget->initFrameResources(pipeline.descriptorSetLayout,
+                                        sizeof(UniformBufferObject),
+                                        &texDescInfo);
 }
 
 void Renderer::cleanup() {
     m_ctx->device.waitIdle();
     m_renderTarget->cleanupFrameResources();
-    m_vertexBuffer = nullptr;
-    m_vertexBufferMemory = nullptr;
-    m_vertexCount = 0;
-    m_indexBuffer = nullptr;
-    m_indexBufferMemory = nullptr;
-    m_indexCount = 0;
+    m_mesh.cleanup();
+    m_texture.cleanup();
     m_memoryManager.reset();
 }
 
@@ -199,12 +156,8 @@ void Renderer::recordRendering() {
                                             vk::ShaderStageFlagBits::eFragment,
                                             0, pushData);
 
-    vk::Buffer vertexBuffers[] = {*m_vertexBuffer};
-    vk::DeviceSize offsets[] = {0};
-    cmd.bindVertexBuffers(0, vertexBuffers, offsets);
-    cmd.bindIndexBuffer(*m_indexBuffer, 0, vk::IndexType::eUint32);
-
-    cmd.drawIndexed(m_indexCount, 1, 0, 0, 0);
+    m_mesh.bind(cmd);
+    m_mesh.draw(cmd);
     cmd.endRendering();
 
     auto postRenderBarrier = utils::createImageTransitionInfo(

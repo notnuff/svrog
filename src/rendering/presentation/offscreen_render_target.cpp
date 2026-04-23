@@ -176,8 +176,9 @@ uint32_t OffscreenRenderTarget::framesInFlight() const {
 }
 
 void OffscreenRenderTarget::initFrameResources(const vk::raii::DescriptorSetLayout& layout,
-                                                 vk::DeviceSize uboSize) {
-    m_frameResources.init(*m_ctx, layout, uboSize, 1);
+                                                 vk::DeviceSize uboSize,
+                                                 const vk::DescriptorImageInfo* textureInfo) {
+    m_frameResources.init(*m_ctx, layout, uboSize, 1, textureInfo);
 }
 
 void OffscreenRenderTarget::cleanupFrameResources() {
