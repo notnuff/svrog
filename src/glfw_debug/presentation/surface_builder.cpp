@@ -15,7 +15,7 @@ void SurfaceBuilder::build(CoreCtx& ctx) {
     if (!m_surfaceCreator) {
         throw std::runtime_error("SurfaceBuilder: No surface creator function set");
     }
-    auto& swapchain = ctx.extension<SwapchainCtxMixin>();
+    auto& swapchain = ctx.component<SwapchainCtxComponent>();
     VkSurfaceKHR rawSurface = m_surfaceCreator(*ctx.instance);
     swapchain.surface = vk::raii::SurfaceKHR(ctx.instance, rawSurface);
     qCInfo(logger()) << "Surface created";

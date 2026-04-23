@@ -3,8 +3,8 @@
 namespace nuff::renderer {
 
 void RenderPassBuilder::build(CoreCtx& ctx) {
-    auto& swapchain = ctx.extension<SwapchainCtxMixin>();
-    auto& rp = ctx.extension<RenderPassCtxMixin>();
+    auto& swapchain = ctx.component<SwapchainCtxComponent>();
+    auto& rp = ctx.component<RenderPassCtxComponent>();
 
     vk::AttachmentDescription colorAttachment{
         .format = swapchain.swapchainImageFormat,

@@ -19,7 +19,7 @@ void OffscreenRenderTarget::resize(uint32_t width, uint32_t height) {
 }
 
 void OffscreenRenderTarget::createResources() {
-    auto& graphics = m_ctx->extension<GraphicsCtxMixin>();
+    auto& graphics = m_ctx->component<GraphicsCtxComponent>();
 
     vk::ExternalMemoryImageCreateInfo extMemImageInfo{
         .handleTypes = vk::ExternalMemoryHandleTypeFlagBits::eOpaqueFd
@@ -128,7 +128,7 @@ IRenderTarget::FrameResult OffscreenRenderTarget::beginFrame() {
 }
 
 IRenderTarget::FrameResult OffscreenRenderTarget::endFrame() {
-    auto& graphics = m_ctx->extension<GraphicsCtxMixin>();
+    auto& graphics = m_ctx->component<GraphicsCtxComponent>();
 
     vk::CommandBuffer cmdBuf = *m_commandBuffers[0];
     vk::SubmitInfo submitInfo{

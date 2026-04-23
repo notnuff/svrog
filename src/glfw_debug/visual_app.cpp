@@ -96,7 +96,7 @@ void VkVisualTestApp::recreateSwapchain() {
 
     m_ctx->device.waitIdle();
 
-    auto& swapchain = m_ctx->extension<SwapchainCtxMixin>();
+    auto& swapchain = m_ctx->component<SwapchainCtxComponent>();
     swapchain.swapchainImageViews.clear();
     swapchain.swapchainImages.clear();
 

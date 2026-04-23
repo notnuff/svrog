@@ -12,17 +12,17 @@ DebugInstanceBuilder::DebugInstanceBuilder() {
 void DebugInstanceBuilder::build(CoreCtx& ctx) {
     qCInfo(logger()) << "Configuring debug validation layers and extensions";
 
-    auto& extLayers = ctx.extension<InstanceLayersMixin>();
+    auto& extLayers = ctx.component<InstanceLayersComponent>();
     extLayers.instanceLayers.push_back("VK_LAYER_KHRONOS_validation");
 
-    auto& extExtensions = ctx.extension<InstanceExtensionsMixin>();
+    auto& extExtensions = ctx.component<InstanceExtensionsComponent>();
     extExtensions.instanceExtensions.push_back(vk::EXTDebugUtilsExtensionName);
 }
 
 void DebugMessengerBuilder::build(CoreCtx& ctx) {
     qCInfo(logger()) << "Setting up debug messenger";
 
-    auto& extMessenger = ctx.extension<DebugMessengerCtxMixin>();
+    auto& extMessenger = ctx.component<DebugMessengerCtxComponent>();
 
     vk::DebugUtilsMessengerCreateInfoEXT createInfo{
         .messageSeverity = vk::DebugUtilsMessageSeverityFlagBitsEXT::eVerbose |

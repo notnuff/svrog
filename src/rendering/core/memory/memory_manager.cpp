@@ -33,7 +33,7 @@ AllocatedBuffer MemoryManager::createBuffer(vk::DeviceSize size,
 }
 
 SingleTimeCommandContext MemoryManager::beginSingleTimeCommands() const {
-    auto& graphics = m_ctx.extension<GraphicsCtxMixin>();
+    auto& graphics = m_ctx.component<GraphicsCtxComponent>();
 
     SingleTimeCommandContext cmdCtx;
 
@@ -56,7 +56,7 @@ SingleTimeCommandContext MemoryManager::beginSingleTimeCommands() const {
 }
 
 void MemoryManager::endSingleTimeCommands(SingleTimeCommandContext& cmdCtx) const {
-    auto& graphics = m_ctx.extension<GraphicsCtxMixin>();
+    auto& graphics = m_ctx.component<GraphicsCtxComponent>();
 
     cmdCtx.cmd().end();
 

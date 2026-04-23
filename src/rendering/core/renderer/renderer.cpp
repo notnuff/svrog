@@ -64,7 +64,7 @@ void Renderer::initialize() {
     m_texture.loadFromFile(*m_ctx, *m_memoryManager, m_texturePath);
     auto texDescInfo = m_texture.descriptorInfo();
 
-    auto& pipeline = m_ctx->extension<PipelineCtxMixin>();
+    auto& pipeline = m_ctx->component<PipelineCtxComponent>();
     m_renderTarget->initFrameResources(pipeline.descriptorSetLayout,
                                         sizeof(UniformBufferObject),
                                         &texDescInfo);
@@ -95,7 +95,7 @@ void Renderer::drawFrame() {
 }
 
 void Renderer::recordRendering() {
-    auto& pipeline = m_ctx->extension<PipelineCtxMixin>();
+    auto& pipeline = m_ctx->component<PipelineCtxComponent>();
     auto& cmd = m_renderTarget->commandBuffer();
     auto targetImage = m_renderTarget->image();
     auto targetExtent = m_renderTarget->extent();

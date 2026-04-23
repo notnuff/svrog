@@ -85,8 +85,8 @@ vk::Extent2D SwapchainBuilder::chooseSwapExtent(
 }
 
 void SwapchainBuilder::build(CoreCtx& ctx) {
-    auto& sc = ctx.extension<SwapchainCtxMixin>();
-    auto& graphics = ctx.extension<GraphicsCtxMixin>();
+    auto& sc = ctx.component<SwapchainCtxComponent>();
+    auto& graphics = ctx.component<GraphicsCtxComponent>();
 
     auto swapchainSupport = querySwapchainSupport(ctx.physicalDevice, *sc.surface);
 

@@ -3,7 +3,7 @@
 namespace nuff::renderer {
 
 void PresentDeviceBuilder::build(CoreCtx& ctx) {
-    auto& reqs = ctx.extension<DeviceRequirementsMixin>();
+    auto& reqs = ctx.component<DeviceRequirementsComponent>();
     reqs.requirePresent = true;
     reqs.additionalDeviceExtensions.push_back(vk::KHRSwapchainExtensionName);
 }

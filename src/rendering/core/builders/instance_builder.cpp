@@ -5,8 +5,8 @@
 namespace nuff::renderer {
 
 void InstanceBuilder::build(CoreCtx& ctx) {
-    m_extensions = std::move(ctx.extension<InstanceExtensionsMixin>().instanceExtensions);
-    m_layers = std::move(ctx.extension<InstanceLayersMixin>().instanceLayers);
+    m_extensions = std::move(ctx.component<InstanceExtensionsComponent>().instanceExtensions);
+    m_layers = std::move(ctx.component<InstanceLayersComponent>().instanceLayers);
 
     vk::ApplicationInfo appInfo{
         .pApplicationName = m_appName.c_str(),

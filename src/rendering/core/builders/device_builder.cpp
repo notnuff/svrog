@@ -154,15 +154,15 @@ bool DeviceBuilder::isDeviceSuitable(vk::PhysicalDevice device, vk::SurfaceKHR s
 }
 
 void DeviceBuilder::build(CoreCtx& ctx) {
-    auto& graphics = ctx.extension<GraphicsCtxMixin>();
-    auto& reqs = ctx.extension<DeviceRequirementsMixin>();
-    auto& pref = ctx.extension<PhysicalDevicePreferenceMixin>();
+    auto& graphics = ctx.component<GraphicsCtxComponent>();
+    auto& reqs = ctx.component<DeviceRequirementsComponent>();
+    auto& pref = ctx.component<PhysicalDevicePreferenceComponent>();
 
     std::vector<const char*> deviceExtensions = reqs.additionalDeviceExtensions;
 
     vk::SurfaceKHR surface = nullptr;
     if (reqs.requirePresent) {
-        auto& swapchain = ctx.extension<SwapchainCtxMixin>();
+        auto& swapchain = ctx.component<SwapchainCtxComponent>();
         surface = *swapchain.surface;
     }
 
@@ -267,7 +267,7 @@ void DeviceBuilder::build(CoreCtx& ctx) {
     graphics.graphicsQueue = ctx.device.getQueue(graphics.queueFamilyIndices.graphicsFamily.value(), 0);
 
     if (reqs.requirePresent && graphics.queueFamilyIndices.presentFamily.has_value()) {
-        auto& presentMixin = ctx.extension<PresentQueueMixin>();
+        auto& presentMixin = ctx.component<PresentQueueComponent>();
         presentMixin.presentQueue = ctx.device.getQueue(
             graphics.queueFamilyIndices.presentFamily.value(), 0);
     }

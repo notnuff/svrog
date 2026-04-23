@@ -3,6 +3,7 @@
 #include "common/vk_common.h"
 
 #include <optional>
+#include <unordered_map>
 #include <vector>
 
 namespace nuff::renderer {
@@ -22,9 +23,21 @@ struct QueueFamilyIndices {
     }
 };
 
-struct ICtxExtension {
-    ICtxExtension() = default;
-    virtual ~ICtxExtension() = default;
+struct ICtxComponent {
+    ICtxComponent() = default;
+    virtual ~ICtxComponent() = default;
+};
+
+class CtxComponentTypeIDSystem {
+private:
+    static size_t nextTypeID;
+
+public:
+    template<typename T>
+    static size_t getTypeID() {
+        static size_t typeID = nextTypeID++;
+        return typeID;
+    }
 };
 
 struct CoreCtx {
@@ -35,70 +48,72 @@ struct CoreCtx {
     vk::raii::PhysicalDevice physicalDevice{nullptr};
     vk::raii::Device device{nullptr};
 
-    template <typename CtxExtension>
-    CtxExtension& extension() {
-        static_assert(std::is_base_of_v<ICtxExtension, CtxExtension>,
+    template <typename CtxComponentT>
+    CtxComponentT& component() {
+        static_assert(std::is_base_of_v<ICtxComponent, CtxComponentT>,
               "extension must derive from ICtxExtension");
 
-        for (const auto& extension : ctxExtensions) {
-            if (auto ext = dynamic_cast<CtxExtension*>(extension.get())) {
-                return *ext;
-            }
+        auto id = CtxComponentTypeIDSystem::getTypeID<CtxComponentT>();
+        if (m_ctxComponentsMap.contains(id)) {
+            return *(static_cast<CtxComponentT*>(m_ctxComponentsMap[id]));
         }
 
-        auto ptr = std::make_unique<CtxExtension>();
-        CtxExtension& ref = *ptr;
+        auto ptr = std::make_unique<CtxComponentT>();
+        CtxComponentT& ref = *ptr;
 
-        ctxExtensions.emplace_back(std::move(ptr));
+        m_ctxComponents.emplace_back(std::move(ptr));
+        m_ctxComponentsMap[id] = &ref;
+
         return ref;
     }
 
 private:
-    std::vector<std::unique_ptr<ICtxExtension>> ctxExtensions;
+    std::vector<std::unique_ptr<ICtxComponent>> m_ctxComponents;
+    std::unordered_map<size_t, ICtxComponent*> m_ctxComponentsMap;
 };
 
-struct GraphicsCtxMixin : ICtxExtension {
+struct GraphicsCtxComponent : ICtxComponent {
     vk::Queue graphicsQueue;
     QueueFamilyIndices queueFamilyIndices;
 };
 
-struct InstanceExtensionsMixin : ICtxExtension {
+struct InstanceExtensionsComponent : ICtxComponent {
     std::vector<const char*> instanceExtensions;
 };
 
-struct InstanceLayersMixin : ICtxExtension {
+struct InstanceLayersComponent : ICtxComponent {
     std::vector<const char*> instanceLayers;
 };
 
-struct DebugMessengerCtxMixin : ICtxExtension {
+struct DebugMessengerCtxComponent : ICtxComponent {
     vk::raii::DebugUtilsMessengerEXT debugMessenger{nullptr};
 };
 
-struct PipelineCtxMixin : ICtxExtension {
+struct PipelineCtxComponent : ICtxComponent {
     vk::raii::DescriptorSetLayout descriptorSetLayout{nullptr};
     vk::raii::PipelineLayout pipelineLayout{nullptr};
     vk::raii::Pipeline graphicsPipeline{nullptr};
 };
 
-struct PipelineConfigMixin : ICtxExtension {
+struct PipelineConfigComponent : ICtxComponent {
     vk::Format colorAttachmentFormat = vk::Format::eB8G8R8A8Unorm;
 };
 
-struct DeviceRequirementsMixin : ICtxExtension {
+struct DeviceRequirementsComponent : ICtxComponent {
     bool requirePresent = false;
     std::vector<const char*> additionalDeviceExtensions;
 };
 
-struct PhysicalDevicePreferenceMixin : ICtxExtension {
+struct PhysicalDevicePreferenceComponent : ICtxComponent {
     std::optional<uint32_t> preferredVendorId;
     std::optional<uint32_t> preferredDeviceId;
 };
 
-struct PresentQueueMixin : ICtxExtension {
+struct PresentQueueComponent : ICtxComponent {
     vk::Queue presentQueue;
 };
 
-struct SwapchainCtxMixin : ICtxExtension {
+struct SwapchainCtxComponent : ICtxComponent {
     vk::raii::SurfaceKHR surface{nullptr};
     vk::raii::SwapchainKHR swapchain{nullptr};
     std::vector<vk::Image> swapchainImages;
@@ -113,7 +128,7 @@ struct SwapchainSupportDetails {
     std::vector<vk::PresentModeKHR> presentModes;
 };
 
-struct RenderPassCtxMixin : ICtxExtension {
+struct RenderPassCtxComponent : ICtxComponent {
     vk::raii::RenderPass renderPass{nullptr};
     std::vector<vk::raii::Framebuffer> framebuffers;
 };

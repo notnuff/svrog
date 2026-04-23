@@ -55,7 +55,7 @@ protected:
     }
 
     void configureCtx(renderer::CoreCtx& ctx) override {
-        auto& ext = ctx.extension<renderer::InstanceExtensionsMixin>();
+        auto& ext = ctx.component<renderer::InstanceExtensionsComponent>();
         ext.instanceExtensions.insert(
             ext.instanceExtensions.end(),
             m_glfwExtensions.begin(),

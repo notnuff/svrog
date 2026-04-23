@@ -27,8 +27,8 @@ PipelineBuilder& PipelineBuilder::setFragmentShaderCode(const std::vector<char>&
 }
 
 void PipelineBuilder::build(CoreCtx& ctx) {
-    auto& pipelineConfig = ctx.extension<PipelineConfigMixin>();
-    auto& pipeline = ctx.extension<PipelineCtxMixin>();
+    auto& pipelineConfig = ctx.component<PipelineConfigComponent>();
+    auto& pipeline = ctx.component<PipelineCtxComponent>();
 
     std::vector<char> vertCode = m_vertexShaderCode.empty()
         ? nuff::utils::readFile(m_vertexShaderPath) : m_vertexShaderCode;

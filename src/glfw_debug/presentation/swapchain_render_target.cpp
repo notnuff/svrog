@@ -11,8 +11,8 @@ SwapchainRenderTarget::SwapchainRenderTarget(CoreCtx* ctx, uint32_t maxFramesInF
 }
 
 void SwapchainRenderTarget::createResources() {
-    auto& graphics = m_ctx->extension<GraphicsCtxMixin>();
-    auto& swapchain = m_ctx->extension<SwapchainCtxMixin>();
+    auto& graphics = m_ctx->component<GraphicsCtxComponent>();
+    auto& swapchain = m_ctx->component<SwapchainCtxComponent>();
 
     m_commandBuffers = nullptr;
     m_commandPool = nullptr;
@@ -52,7 +52,7 @@ void SwapchainRenderTarget::recreateResources() {
 }
 
 IRenderTarget::FrameResult SwapchainRenderTarget::beginFrame() {
-    auto& swapchain = m_ctx->extension<SwapchainCtxMixin>();
+    auto& swapchain = m_ctx->component<SwapchainCtxComponent>();
 
     auto waitResult = m_ctx->device.waitForFences(
         {*m_inFlightFences[m_currentFrame]}, vk::True, UINT64_MAX);
@@ -77,9 +77,9 @@ IRenderTarget::FrameResult SwapchainRenderTarget::beginFrame() {
 }
 
 IRenderTarget::FrameResult SwapchainRenderTarget::endFrame() {
-    auto& swapchain = m_ctx->extension<SwapchainCtxMixin>();
-    auto& graphics = m_ctx->extension<GraphicsCtxMixin>();
-    auto& present = m_ctx->extension<PresentQueueMixin>();
+    auto& swapchain = m_ctx->component<SwapchainCtxComponent>();
+    auto& graphics = m_ctx->component<GraphicsCtxComponent>();
+    auto& present = m_ctx->component<PresentQueueComponent>();
 
     vk::Semaphore waitSemaphores[] = {*m_imageAvailableSemaphores[m_currentFrame]};
     vk::PipelineStageFlags waitStages[] = {vk::PipelineStageFlagBits::eColorAttachmentOutput};
@@ -124,21 +124,21 @@ const vk::raii::CommandBuffer& SwapchainRenderTarget::commandBuffer() const {
 }
 
 const vk::raii::ImageView& SwapchainRenderTarget::imageView() const {
-    auto& swapchain = m_ctx->extension<SwapchainCtxMixin>();
+    auto& swapchain = m_ctx->component<SwapchainCtxComponent>();
     return swapchain.swapchainImageViews[m_imageIndex];
 }
 
 vk::Image SwapchainRenderTarget::image() const {
-    auto& swapchain = m_ctx->extension<SwapchainCtxMixin>();
+    auto& swapchain = m_ctx->component<SwapchainCtxComponent>();
     return swapchain.swapchainImages[m_imageIndex];
 }
 
 vk::Extent2D SwapchainRenderTarget::extent() const {
-    return m_ctx->extension<SwapchainCtxMixin>().swapchainExtent;
+    return m_ctx->component<SwapchainCtxComponent>().swapchainExtent;
 }
 
 vk::Format SwapchainRenderTarget::format() const {
-    return m_ctx->extension<SwapchainCtxMixin>().swapchainImageFormat;
+    return m_ctx->component<SwapchainCtxComponent>().swapchainImageFormat;
 }
 
 vk::ImageLayout SwapchainRenderTarget::finalLayout() const {

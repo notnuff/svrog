@@ -3,8 +3,8 @@
 namespace nuff::renderer {
 
 void FramebufferBuilder::build(CoreCtx& ctx) {
-    auto& swapchain = ctx.extension<SwapchainCtxMixin>();
-    auto& rp = ctx.extension<RenderPassCtxMixin>();
+    auto& swapchain = ctx.component<SwapchainCtxComponent>();
+    auto& rp = ctx.component<RenderPassCtxComponent>();
 
     rp.framebuffers.clear();
     rp.framebuffers.reserve(swapchain.swapchainImageViews.size());
