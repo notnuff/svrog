@@ -17,6 +17,59 @@ void SwapchainRenderTarget::createResources() {
     m_commandBuffers = nullptr;
     m_commandPool = nullptr;
 
+    m_depthImageView = nullptr;
+    m_depthImage = nullptr;
+    m_depthImageMemory = nullptr;
+
+    vk::ImageCreateInfo depthImageInfo{
+        .imageType = vk::ImageType::e2D,
+        .format = m_depthFormat,
+        .extent = {swapchain.swapchainExtent.width, swapchain.swapchainExtent.height, 1},
+        .mipLevels = 1,
+        .arrayLayers = 1,
+        .samples = vk::SampleCountFlagBits::e1,
+        .tiling = vk::ImageTiling::eOptimal,
+        .usage = vk::ImageUsageFlagBits::eDepthStencilAttachment,
+        .sharingMode = vk::SharingMode::eExclusive,
+        .initialLayout = vk::ImageLayout::eUndefined
+    };
+    m_depthImage = vk::raii::Image(m_ctx->device, depthImageInfo);
+
+    auto depthMemReqs = m_depthImage.getMemoryRequirements();
+    auto memProps = m_ctx->physicalDevice.getMemoryProperties();
+    uint32_t depthMemTypeIndex = UINT32_MAX;
+    for (uint32_t i = 0; i < memProps.memoryTypeCount; i++) {
+        if ((depthMemReqs.memoryTypeBits & (1 << i)) &&
+            (memProps.memoryTypes[i].propertyFlags & vk::MemoryPropertyFlagBits::eDeviceLocal)) {
+            depthMemTypeIndex = i;
+            break;
+        }
+    }
+    if (depthMemTypeIndex == UINT32_MAX) {
+        throw std::runtime_error("Failed to find suitable memory type for depth image");
+    }
+
+    vk::MemoryAllocateInfo depthAllocInfo{
+        .allocationSize = depthMemReqs.size,
+        .memoryTypeIndex = depthMemTypeIndex
+    };
+    m_depthImageMemory = vk::raii::DeviceMemory(m_ctx->device, depthAllocInfo);
+    m_depthImage.bindMemory(*m_depthImageMemory, 0);
+
+    vk::ImageViewCreateInfo depthViewInfo{
+        .image = *m_depthImage,
+        .viewType = vk::ImageViewType::e2D,
+        .format = m_depthFormat,
+        .subresourceRange = {
+            .aspectMask = vk::ImageAspectFlagBits::eDepth,
+            .baseMipLevel = 0,
+            .levelCount = 1,
+            .baseArrayLayer = 0,
+            .layerCount = 1
+        }
+    };
+    m_depthImageView = vk::raii::ImageView(m_ctx->device, depthViewInfo);
+
     vk::CommandPoolCreateInfo poolInfo{
         .flags = vk::CommandPoolCreateFlagBits::eResetCommandBuffer,
         .queueFamilyIndex = graphics.queueFamilyIndices.graphicsFamily.value()
@@ -139,6 +192,18 @@ vk::Extent2D SwapchainRenderTarget::extent() const {
 
 vk::Format SwapchainRenderTarget::format() const {
     return m_ctx->component<SwapchainCtxComponent>().swapchainImageFormat;
+}
+
+const vk::raii::ImageView& SwapchainRenderTarget::depthImageView() const {
+    return m_depthImageView;
+}
+
+vk::Image SwapchainRenderTarget::depthImage() const {
+    return *m_depthImage;
+}
+
+vk::Format SwapchainRenderTarget::depthFormat() const {
+    return m_depthFormat;
 }
 
 vk::ImageLayout SwapchainRenderTarget::finalLayout() const {

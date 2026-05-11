@@ -127,6 +127,16 @@ void PipelineBuilder::build(CoreCtx& ctx) {
         .pAttachments = &colorBlendAttachment
     };
 
+    vk::PipelineDepthStencilStateCreateInfo depthStencil{
+        .depthTestEnable = vk::True,
+        .depthWriteEnable = vk::True,
+        .depthCompareOp = vk::CompareOp::eLess,
+        .depthBoundsTestEnable = vk::False,
+        .stencilTestEnable = vk::False,
+        .minDepthBounds = 0.0f,
+        .maxDepthBounds = 1.0f
+    };
+
     std::array<vk::DescriptorSetLayoutBinding, 2> bindings = {{
         {
             .binding = 0,
@@ -173,6 +183,7 @@ void PipelineBuilder::build(CoreCtx& ctx) {
             .pViewportState = &viewportState,
             .pRasterizationState = &rasterizer,
             .pMultisampleState = &multisampling,
+            .pDepthStencilState = &depthStencil,
             .pColorBlendState = &colorBlending,
             .pDynamicState = &dynamicStateInfo,
             .layout = *pipeline.pipelineLayout,
@@ -181,7 +192,8 @@ void PipelineBuilder::build(CoreCtx& ctx) {
         },
         vk::PipelineRenderingCreateInfo {
             .colorAttachmentCount = 1,
-            .pColorAttachmentFormats = &pipelineConfig.colorAttachmentFormat
+            .pColorAttachmentFormats = &pipelineConfig.colorAttachmentFormat,
+            .depthAttachmentFormat = pipelineConfig.depthAttachmentFormat
         }
     };
 

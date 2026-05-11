@@ -21,6 +21,11 @@ public:
     virtual vk::Extent2D extent() const = 0;
     virtual vk::Format format() const = 0;
 
+    // Depth resources
+    virtual const vk::raii::ImageView& depthImageView() const = 0;
+    virtual vk::Image depthImage() const = 0;
+    virtual vk::Format depthFormat() const = 0;
+
     // The layout the image should be transitioned to after rendering
     virtual vk::ImageLayout finalLayout() const = 0;
 

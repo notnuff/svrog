@@ -50,15 +50,20 @@ void Renderer::updateUniformBuffer() {
 
 void Renderer::initialize() {
     m_mesh.uploadVertices(*m_memoryManager, {
-        {{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
-        {{ 0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f}},
-        {{ 0.5f,  0.5f}, {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f}},
-        {{-0.5f,  0.5f}, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f}},
+        {{-0.6f, -0.6f,  0.3f}, {1.0f, 0.3f, 0.3f}, {0.0f, 1.0f}},
+        {{ 0.6f, -0.6f,  0.3f}, {1.0f, 0.3f, 0.3f}, {1.0f, 1.0f}},
+        {{ 0.6f,  0.6f,  0.3f}, {1.0f, 0.3f, 0.3f}, {1.0f, 0.0f}},
+        {{-0.6f,  0.6f,  0.3f}, {1.0f, 0.3f, 0.3f}, {0.0f, 0.0f}},
+
+        {{-0.3f, -0.2f, -0.3f}, {0.3f, 1.0f, 0.3f}, {0.0f, 1.0f}},
+        {{ 0.9f, -0.2f, -0.3f}, {0.3f, 1.0f, 0.3f}, {1.0f, 1.0f}},
+        {{ 0.9f,  1.0f, -0.3f}, {0.3f, 1.0f, 0.3f}, {1.0f, 0.0f}},
+        {{-0.3f,  1.0f, -0.3f}, {0.3f, 1.0f, 0.3f}, {0.0f, 0.0f}},
     });
 
     m_mesh.uploadIndices(*m_memoryManager, {
-        0, 1, 2,
-        2, 3, 0
+        0, 1, 2,  0, 2, 3,
+        4, 5, 6,  4, 6, 7,
     });
 
     m_texture.loadFromFile(*m_ctx, *m_memoryManager, m_texturePath);
@@ -114,7 +119,34 @@ void Renderer::recordRendering() {
     );
     cmd.pipelineBarrier2(preRenderBarrier.dependencyInfo);
 
+    vk::ImageMemoryBarrier2 depthBarrier{
+        .srcStageMask = vk::PipelineStageFlagBits2::eEarlyFragmentTests
+            | vk::PipelineStageFlagBits2::eLateFragmentTests,
+        .srcAccessMask = {},
+        .dstStageMask = vk::PipelineStageFlagBits2::eEarlyFragmentTests
+            | vk::PipelineStageFlagBits2::eLateFragmentTests,
+        .dstAccessMask = vk::AccessFlagBits2::eDepthStencilAttachmentWrite,
+        .oldLayout = vk::ImageLayout::eUndefined,
+        .newLayout = vk::ImageLayout::eDepthAttachmentOptimal,
+        .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+        .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+        .image = m_renderTarget->depthImage(),
+        .subresourceRange = {
+            .aspectMask = vk::ImageAspectFlagBits::eDepth,
+            .baseMipLevel = 0,
+            .levelCount = 1,
+            .baseArrayLayer = 0,
+            .layerCount = 1
+        }
+    };
+    vk::DependencyInfo depthDepInfo{
+        .imageMemoryBarrierCount = 1,
+        .pImageMemoryBarriers = &depthBarrier
+    };
+    cmd.pipelineBarrier2(depthDepInfo);
+
     vk::ClearValue clearColor{vk::ClearColorValue{std::array<float, 4>{0.0f, 0.0f, 0.0f, 0.9f}}};
+    vk::ClearValue clearDepth{vk::ClearDepthStencilValue{.depth = 1.0f, .stencil = 0}};
 
     vk::RenderingAttachmentInfo attachmentInfo = {
         .imageView = m_renderTarget->imageView(),
@@ -124,6 +156,14 @@ void Renderer::recordRendering() {
         .clearValue = clearColor
     };
 
+    vk::RenderingAttachmentInfo depthAttachmentInfo = {
+        .imageView = m_renderTarget->depthImageView(),
+        .imageLayout = vk::ImageLayout::eDepthAttachmentOptimal,
+        .loadOp = vk::AttachmentLoadOp::eClear,
+        .storeOp = vk::AttachmentStoreOp::eDontCare,
+        .clearValue = clearDepth
+    };
+
     vk::RenderingInfo renderingInfo = {
         .renderArea = {
             .offset = {0, 0},
@@ -131,7 +171,8 @@ void Renderer::recordRendering() {
         },
         .layerCount = 1,
         .colorAttachmentCount = 1,
-        .pColorAttachments = &attachmentInfo
+        .pColorAttachments = &attachmentInfo,
+        .pDepthAttachment = &depthAttachmentInfo
     };
 
     cmd.beginRendering(renderingInfo);

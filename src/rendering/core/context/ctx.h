@@ -97,6 +97,7 @@ struct PipelineCtxComponent : ICtxComponent {
 
 struct PipelineConfigComponent : ICtxComponent {
     vk::Format colorAttachmentFormat = vk::Format::eB8G8R8A8Unorm;
+    vk::Format depthAttachmentFormat = vk::Format::eD32Sfloat;
 };
 
 struct DeviceRequirementsComponent : ICtxComponent {

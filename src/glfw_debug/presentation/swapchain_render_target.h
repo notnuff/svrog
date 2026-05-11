@@ -21,6 +21,9 @@ public:
     vk::Image image() const override;
     vk::Extent2D extent() const override;
     vk::Format format() const override;
+    const vk::raii::ImageView& depthImageView() const override;
+    vk::Image depthImage() const override;
+    vk::Format depthFormat() const override;
     vk::ImageLayout finalLayout() const override;
 
     uint32_t currentFrameIndex() const override;
@@ -46,6 +49,11 @@ private:
     std::vector<vk::raii::Semaphore> m_imageAvailableSemaphores;
     std::vector<vk::raii::Semaphore> m_renderFinishedSemaphores;
     std::vector<vk::raii::Fence> m_inFlightFences;
+
+    vk::Format m_depthFormat = vk::Format::eD32Sfloat;
+    vk::raii::Image m_depthImage{nullptr};
+    vk::raii::DeviceMemory m_depthImageMemory{nullptr};
+    vk::raii::ImageView m_depthImageView{nullptr};
 
     FrameResources m_frameResources;
 };

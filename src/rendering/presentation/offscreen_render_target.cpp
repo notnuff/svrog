@@ -87,6 +87,54 @@ void OffscreenRenderTarget::createResources() {
     };
     m_imageView = vk::raii::ImageView(m_ctx->device, viewInfo);
 
+    vk::ImageCreateInfo depthImageInfo{
+        .imageType = vk::ImageType::e2D,
+        .format = m_depthFormat,
+        .extent = {m_width, m_height, 1},
+        .mipLevels = 1,
+        .arrayLayers = 1,
+        .samples = vk::SampleCountFlagBits::e1,
+        .tiling = vk::ImageTiling::eOptimal,
+        .usage = vk::ImageUsageFlagBits::eDepthStencilAttachment,
+        .sharingMode = vk::SharingMode::eExclusive,
+        .initialLayout = vk::ImageLayout::eUndefined
+    };
+    m_depthImage = vk::raii::Image(m_ctx->device, depthImageInfo);
+
+    auto depthMemReqs = m_depthImage.getMemoryRequirements();
+    uint32_t depthMemTypeIndex = UINT32_MAX;
+    for (uint32_t i = 0; i < memProps.memoryTypeCount; i++) {
+        if ((depthMemReqs.memoryTypeBits & (1 << i)) &&
+            (memProps.memoryTypes[i].propertyFlags & vk::MemoryPropertyFlagBits::eDeviceLocal)) {
+            depthMemTypeIndex = i;
+            break;
+        }
+    }
+    if (depthMemTypeIndex == UINT32_MAX) {
+        throw std::runtime_error("Failed to find suitable memory type for depth image");
+    }
+
+    vk::MemoryAllocateInfo depthAllocInfo{
+        .allocationSize = depthMemReqs.size,
+        .memoryTypeIndex = depthMemTypeIndex
+    };
+    m_depthImageMemory = vk::raii::DeviceMemory(m_ctx->device, depthAllocInfo);
+    m_depthImage.bindMemory(*m_depthImageMemory, 0);
+
+    vk::ImageViewCreateInfo depthViewInfo{
+        .image = *m_depthImage,
+        .viewType = vk::ImageViewType::e2D,
+        .format = m_depthFormat,
+        .subresourceRange = {
+            .aspectMask = vk::ImageAspectFlagBits::eDepth,
+            .baseMipLevel = 0,
+            .levelCount = 1,
+            .baseArrayLayer = 0,
+            .layerCount = 1
+        }
+    };
+    m_depthImageView = vk::raii::ImageView(m_ctx->device, depthViewInfo);
+
     vk::CommandPoolCreateInfo poolInfo{
         .flags = vk::CommandPoolCreateFlagBits::eResetCommandBuffer,
         .queueFamilyIndex = graphics.queueFamilyIndices.graphicsFamily.value()
@@ -161,6 +209,18 @@ vk::Extent2D OffscreenRenderTarget::extent() const {
 
 vk::Format OffscreenRenderTarget::format() const {
     return m_format;
+}
+
+const vk::raii::ImageView& OffscreenRenderTarget::depthImageView() const {
+    return m_depthImageView;
+}
+
+vk::Image OffscreenRenderTarget::depthImage() const {
+    return *m_depthImage;
+}
+
+vk::Format OffscreenRenderTarget::depthFormat() const {
+    return m_depthFormat;
 }
 
 vk::ImageLayout OffscreenRenderTarget::finalLayout() const {
