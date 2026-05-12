@@ -3,6 +3,7 @@ set(TARGET_NAME renderer)
 find_package(Vulkan REQUIRED)
 find_package(Qt6 REQUIRED COMPONENTS Core Gui)
 find_package(glm REQUIRED)
+find_package(TinyGLTF REQUIRED)
 
 set(SOURCES "")
 set(HEADERS "")
@@ -19,6 +20,10 @@ target_link_libraries(${TARGET_NAME} PUBLIC
         Qt6::Gui
         glm::glm
         utils
+)
+
+target_link_libraries(${TARGET_NAME} PRIVATE
+        TinyGLTF::TinyGLTF
 )
 
 target_include_directories(${TARGET_NAME}

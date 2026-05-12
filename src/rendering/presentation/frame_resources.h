@@ -12,8 +12,7 @@ public:
     void init(CoreCtx& ctx,
               const vk::raii::DescriptorSetLayout& layout,
               vk::DeviceSize uboSize,
-              uint32_t frameCount,
-              const vk::DescriptorImageInfo* textureInfo = nullptr);
+              uint32_t frameCount);
 
     void cleanup(CoreCtx& ctx);
 

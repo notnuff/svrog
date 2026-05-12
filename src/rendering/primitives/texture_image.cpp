@@ -14,10 +14,15 @@ void TextureImage::loadFromFile(CoreCtx& ctx, MemoryManager& memoryManager,
     }
 
     image = image.convertToFormat(QImage::Format_RGBA8888);
+    loadFromPixels(ctx, memoryManager, image.constBits(),
+                   static_cast<uint32_t>(image.width()),
+                   static_cast<uint32_t>(image.height()));
+}
 
-    auto texWidth = static_cast<uint32_t>(image.width());
-    auto texHeight = static_cast<uint32_t>(image.height());
-    vk::DeviceSize imageSize = texWidth * texHeight * 4;
+void TextureImage::loadFromPixels(CoreCtx& ctx, MemoryManager& memoryManager,
+                                   const unsigned char* rgba,
+                                   uint32_t texWidth, uint32_t texHeight) {
+    vk::DeviceSize imageSize = static_cast<vk::DeviceSize>(texWidth) * texHeight * 4;
 
     auto staging = memoryManager.createBuffer(
         imageSize,
@@ -25,7 +30,7 @@ void TextureImage::loadFromFile(CoreCtx& ctx, MemoryManager& memoryManager,
         vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent);
 
     void* data = staging.memory.mapMemory(0, imageSize);
-    std::memcpy(data, image.constBits(), static_cast<size_t>(imageSize));
+    std::memcpy(data, rgba, static_cast<size_t>(imageSize));
     staging.memory.unmapMemory();
 
     auto allocatedImage = memoryManager.createImage(

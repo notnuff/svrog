@@ -74,7 +74,7 @@ void VkVisualTestApp::initRenderer() {
 
     m_renderer.setContext(m_ctx.get());
     m_renderer.setRenderTarget(m_renderTarget.get());
-    m_renderer.setTexturePath("textures/test.jpeg");
+    m_renderer.setModelPath("models/mv_spartan/scene.gltf");
     m_renderer.setRecreateCallback([this]() {
         recreateSwapchain();
     });

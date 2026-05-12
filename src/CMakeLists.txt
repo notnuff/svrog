@@ -29,6 +29,11 @@ if(BUILD_STANDALONE_GLFW_RENDERER)
     if(TEXTURE_FILES)
         file(COPY ${TEXTURE_FILES} DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/glfw_debug/textures)
     endif()
+
+    if(EXISTS ${CMAKE_SOURCE_DIR}/mv_spartan)
+        file(COPY ${CMAKE_SOURCE_DIR}/mv_spartan
+             DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/glfw_debug/models)
+    endif()
 else()
     add_subdirectory(bridge)
     add_subdirectory(ui/VulkanViewport)
@@ -61,5 +66,10 @@ else()
 
     if(TEXTURE_FILES)
         file(COPY ${TEXTURE_FILES} DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/textures)
+    endif()
+
+    if(EXISTS ${CMAKE_SOURCE_DIR}/mv_spartan)
+        file(COPY ${CMAKE_SOURCE_DIR}/mv_spartan
+             DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/models)
     endif()
 endif()

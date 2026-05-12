@@ -137,38 +137,44 @@ void PipelineBuilder::build(CoreCtx& ctx) {
         .maxDepthBounds = 1.0f
     };
 
-    std::array<vk::DescriptorSetLayoutBinding, 2> bindings = {{
-        {
-            .binding = 0,
-            .descriptorType = vk::DescriptorType::eUniformBuffer,
-            .descriptorCount = 1,
-            .stageFlags = vk::ShaderStageFlagBits::eVertex
-        },
-        {
-            .binding = 1,
-            .descriptorType = vk::DescriptorType::eCombinedImageSampler,
-            .descriptorCount = 1,
-            .stageFlags = vk::ShaderStageFlagBits::eFragment
-        }
-    }};
-
-    vk::DescriptorSetLayoutCreateInfo layoutInfo{
-        .bindingCount = static_cast<uint32_t>(bindings.size()),
-        .pBindings = bindings.data()
+    vk::DescriptorSetLayoutBinding frameBinding{
+        .binding = 0,
+        .descriptorType = vk::DescriptorType::eUniformBuffer,
+        .descriptorCount = 1,
+        .stageFlags = vk::ShaderStageFlagBits::eVertex
     };
-    pipeline.descriptorSetLayout = vk::raii::DescriptorSetLayout(ctx.device, layoutInfo);
+    vk::DescriptorSetLayoutCreateInfo frameLayoutInfo{
+        .bindingCount = 1,
+        .pBindings = &frameBinding
+    };
+    pipeline.descriptorSetLayout = vk::raii::DescriptorSetLayout(ctx.device, frameLayoutInfo);
 
-    vk::DescriptorSetLayout setLayout = *pipeline.descriptorSetLayout;
+    vk::DescriptorSetLayoutBinding materialBinding{
+        .binding = 0,
+        .descriptorType = vk::DescriptorType::eCombinedImageSampler,
+        .descriptorCount = 1,
+        .stageFlags = vk::ShaderStageFlagBits::eFragment
+    };
+    vk::DescriptorSetLayoutCreateInfo materialLayoutInfo{
+        .bindingCount = 1,
+        .pBindings = &materialBinding
+    };
+    pipeline.materialSetLayout = vk::raii::DescriptorSetLayout(ctx.device, materialLayoutInfo);
+
+    std::array<vk::DescriptorSetLayout, 2> setLayouts = {
+        *pipeline.descriptorSetLayout,
+        *pipeline.materialSetLayout
+    };
 
     vk::PushConstantRange pushConstantRange{
-        .stageFlags = vk::ShaderStageFlagBits::eFragment,
+        .stageFlags = vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment,
         .offset = 0,
-        .size = sizeof(TimePushConstantData)
+        .size = sizeof(ObjectPushConstantData)
     };
 
     vk::PipelineLayoutCreateInfo pipelineLayoutInfo{
-        .setLayoutCount = 1,
-        .pSetLayouts = &setLayout,
+        .setLayoutCount = static_cast<uint32_t>(setLayouts.size()),
+        .pSetLayouts = setLayouts.data(),
         .pushConstantRangeCount = 1,
         .pPushConstantRanges = &pushConstantRange
     };

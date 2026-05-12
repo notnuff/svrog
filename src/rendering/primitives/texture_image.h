@@ -12,6 +12,8 @@ public:
     TextureImage() = default;
 
     void loadFromFile(CoreCtx& ctx, MemoryManager& memoryManager, const std::string& filePath);
+    void loadFromPixels(CoreCtx& ctx, MemoryManager& memoryManager,
+                        const unsigned char* rgba, uint32_t width, uint32_t height);
 
     void cleanup();
 

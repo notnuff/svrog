@@ -1,10 +1,10 @@
 #pragma once
 
 #include "common/vk_common.h"
-#include "primitives/vertex.h"
 #include "core/memory/memory_manager.h"
+#include "primitives/mesh_data.h"
+#include "primitives/vertex.h"
 
-#include <vector>
 #include <cstring>
 
 namespace nuff::renderer {
@@ -13,6 +13,33 @@ class Mesh {
 public:
     Mesh() = default;
 
+    void upload(MemoryManager& memoryManager, const MeshData& meshData) {
+        uploadVertices(memoryManager, meshData.vertices);
+        uploadIndices(memoryManager, meshData.indices);
+    }
+
+    void bind(const vk::raii::CommandBuffer& cmd) const {
+        vk::Buffer vertexBuffers[] = {*m_vertexBuffer.buffer};
+        vk::DeviceSize offsets[] = {0};
+        cmd.bindVertexBuffers(0, vertexBuffers, offsets);
+        cmd.bindIndexBuffer(*m_indexBuffer.buffer, 0, vk::IndexType::eUint32);
+    }
+
+    void draw(const vk::raii::CommandBuffer& cmd) const {
+        cmd.drawIndexed(m_indexCount, 1, 0, 0, 0);
+    }
+
+    void cleanup() {
+        m_vertexBuffer = {};
+        m_vertexCount = 0;
+        m_indexBuffer = {};
+        m_indexCount = 0;
+    }
+
+    [[nodiscard]] uint32_t vertexCount() const { return m_vertexCount; }
+    [[nodiscard]] uint32_t indexCount() const { return m_indexCount; }
+
+private:
     void uploadVertices(MemoryManager& memoryManager, const std::vector<Vertex>& vertices) {
         vk::DeviceSize bufferSize = sizeof(Vertex) * vertices.size();
         m_vertexCount = static_cast<uint32_t>(vertices.size());
@@ -26,15 +53,12 @@ public:
         std::memcpy(data, vertices.data(), static_cast<size_t>(bufferSize));
         staging.memory.unmapMemory();
 
-        auto vertexBuf = memoryManager.createBuffer(
+        m_vertexBuffer = memoryManager.createBuffer(
             bufferSize,
             vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eVertexBuffer,
             vk::MemoryPropertyFlagBits::eDeviceLocal);
 
-        m_vertexBuffer = std::move(vertexBuf.buffer);
-        m_vertexBufferMemory = std::move(vertexBuf.memory);
-
-        memoryManager.copyBuffer(*staging.buffer, *m_vertexBuffer, bufferSize);
+        memoryManager.copyBuffer(*staging.buffer, *m_vertexBuffer.buffer, bufferSize);
     }
 
     void uploadIndices(MemoryManager& memoryManager, const std::vector<uint32_t>& indices) {
@@ -50,47 +74,18 @@ public:
         std::memcpy(data, indices.data(), static_cast<size_t>(bufferSize));
         staging.memory.unmapMemory();
 
-        auto indexBuf = memoryManager.createBuffer(
+        m_indexBuffer = memoryManager.createBuffer(
             bufferSize,
             vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eIndexBuffer,
             vk::MemoryPropertyFlagBits::eDeviceLocal);
 
-        m_indexBuffer = std::move(indexBuf.buffer);
-        m_indexBufferMemory = std::move(indexBuf.memory);
-
-        memoryManager.copyBuffer(*staging.buffer, *m_indexBuffer, bufferSize);
+        memoryManager.copyBuffer(*staging.buffer, *m_indexBuffer.buffer, bufferSize);
     }
 
-    void bind(const vk::raii::CommandBuffer& cmd) const {
-        vk::Buffer vertexBuffers[] = {*m_vertexBuffer};
-        vk::DeviceSize offsets[] = {0};
-        cmd.bindVertexBuffers(0, vertexBuffers, offsets);
-        cmd.bindIndexBuffer(*m_indexBuffer, 0, vk::IndexType::eUint32);
-    }
-
-    void draw(const vk::raii::CommandBuffer& cmd) const {
-        cmd.drawIndexed(m_indexCount, 1, 0, 0, 0);
-    }
-
-    void cleanup() {
-        m_vertexBuffer = nullptr;
-        m_vertexBufferMemory = nullptr;
-        m_vertexCount = 0;
-        m_indexBuffer = nullptr;
-        m_indexBufferMemory = nullptr;
-        m_indexCount = 0;
-    }
-
-    [[nodiscard]] uint32_t vertexCount() const { return m_vertexCount; }
-    [[nodiscard]] uint32_t indexCount() const { return m_indexCount; }
-
-private:
-    vk::raii::Buffer m_vertexBuffer{nullptr};
-    vk::raii::DeviceMemory m_vertexBufferMemory{nullptr};
+    AllocatedBuffer m_vertexBuffer{};
     uint32_t m_vertexCount = 0;
 
-    vk::raii::Buffer m_indexBuffer{nullptr};
-    vk::raii::DeviceMemory m_indexBufferMemory{nullptr};
+    AllocatedBuffer m_indexBuffer{};
     uint32_t m_indexCount = 0;
 };
 

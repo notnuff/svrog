@@ -30,8 +30,7 @@ public:
     uint32_t framesInFlight() const override;
 
     void initFrameResources(const vk::raii::DescriptorSetLayout& layout,
-                             vk::DeviceSize uboSize,
-                             const vk::DescriptorImageInfo* textureInfo = nullptr) override;
+                             vk::DeviceSize uboSize) override;
     void cleanupFrameResources() override;
     vk::DescriptorSet currentDescriptorSet() const override;
     void* currentUniformBufferMapping() const override;

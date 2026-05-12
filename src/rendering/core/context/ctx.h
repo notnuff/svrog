@@ -91,6 +91,7 @@ struct DebugMessengerCtxComponent : ICtxComponent {
 
 struct PipelineCtxComponent : ICtxComponent {
     vk::raii::DescriptorSetLayout descriptorSetLayout{nullptr};
+    vk::raii::DescriptorSetLayout materialSetLayout{nullptr};
     vk::raii::PipelineLayout pipelineLayout{nullptr};
     vk::raii::Pipeline graphicsPipeline{nullptr};
 };
