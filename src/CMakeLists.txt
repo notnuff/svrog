@@ -9,6 +9,7 @@ option(BUILD_STANDALONE_GLFW_RENDERER "Build standalone GLFW-based Vulkan render
 add_subdirectory(logging)
 add_subdirectory(utils)
 add_subdirectory(rendering)
+add_subdirectory(engine)
 
 file(GLOB TEXTURE_FILES ${CMAKE_CURRENT_SOURCE_DIR}/rendering/textures/*.jpeg
                         ${CMAKE_CURRENT_SOURCE_DIR}/rendering/textures/*.png
