@@ -5,6 +5,8 @@
 
 #include <QLoggingCategory>
 
+#include "engine/input/input_system.h"
+#include "glfw_input_translator.h"
 #include "glfw_platform_config.h"
 
 namespace L {
@@ -45,6 +47,10 @@ void RuntimeApp::initWindow() {
 
     glfwSetWindowUserPointer(m_window, this);
     glfwSetFramebufferSizeCallback(m_window, framebufferResizeCallback);
+    glfwSetKeyCallback(m_window, keyCallback);
+    glfwSetMouseButtonCallback(m_window, mouseButtonCallback);
+    glfwSetCursorPosCallback(m_window, cursorPosCallback);
+    glfwSetScrollCallback(m_window, scrollCallback);
 }
 
 std::unique_ptr<engine::PlatformConfig> RuntimeApp::makePlatformConfig() {
@@ -63,6 +69,37 @@ std::string RuntimeApp::defaultScenePath() const {
 void RuntimeApp::framebufferResizeCallback(GLFWwindow* window, int /*width*/, int /*height*/) {
     auto* self = reinterpret_cast<RuntimeApp*>(glfwGetWindowUserPointer(window));
     self->notifyFramebufferResized();
+}
+
+void RuntimeApp::keyCallback(GLFWwindow* window, int key, int /*scancode*/, int action, int mods) {
+    auto* self = reinterpret_cast<RuntimeApp*>(glfwGetWindowUserPointer(window));
+    if (!self->isInitialized()) return;
+    self->input().postKey(input::translateKey(key),
+                          input::translateAction(action),
+                          input::translateModifiers(mods));
+}
+
+void RuntimeApp::mouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
+    auto* self = reinterpret_cast<RuntimeApp*>(glfwGetWindowUserPointer(window));
+    if (!self->isInitialized()) return;
+    double x = 0.0, y = 0.0;
+    glfwGetCursorPos(window, &x, &y);
+    self->input().postMouseButton(input::translateMouseButton(button),
+                                  input::translateAction(action),
+                                  x, y,
+                                  input::translateModifiers(mods));
+}
+
+void RuntimeApp::cursorPosCallback(GLFWwindow* window, double xpos, double ypos) {
+    auto* self = reinterpret_cast<RuntimeApp*>(glfwGetWindowUserPointer(window));
+    if (!self->isInitialized()) return;
+    self->input().postMouseMove(xpos, ypos);
+}
+
+void RuntimeApp::scrollCallback(GLFWwindow* window, double xoffset, double yoffset) {
+    auto* self = reinterpret_cast<RuntimeApp*>(glfwGetWindowUserPointer(window));
+    if (!self->isInitialized()) return;
+    self->input().postScroll(xoffset, yoffset);
 }
 
 void RuntimeApp::mainLoop() {

@@ -15,12 +15,14 @@ set(SOURCES
         main.cpp
         runtime_app.cpp
         glfw_platform_config.cpp
+        glfw_input_translator.cpp
 )
 
 set(HEADERS
         runtime_app.h
         glfw_initializer.h
         glfw_platform_config.h
+        glfw_input_translator.h
 )
 
 add_executable(${TARGET_NAME}

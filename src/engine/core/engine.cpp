@@ -1,10 +1,13 @@
 #include "engine.h"
 
-#include "../components/camera_component.h"
+#include "../camera/camera_component.h"
+#include "../camera/default_camera.h"
+#include "../camera/fly_camera_controller.h"
 #include "../components/mesh_component.h"
 #include "../components/transform_component.h"
 #include "../entities/entity.h"
 #include "../events/event_bus.h"
+#include "../input/input_system.h"
 #include "../systems/render_system.h"
 
 #include "resources/gltf_loader.h"
@@ -18,8 +21,13 @@
 
 namespace nuff::engine {
 
-Engine::Engine() : m_events(std::make_unique<events::EventBus>()) {}
+Engine::Engine()
+    : m_events(std::make_unique<events::EventBus>()),
+      m_input(std::make_unique<input::InputSystem>()) {}
 Engine::~Engine() { shutdown(); }
+
+input::InputSystem&       Engine::input()       { return *m_input; }
+const input::InputSystem& Engine::input() const { return *m_input; }
 
 void Engine::notifyFramebufferResized() {
     m_renderer.notifyFramebufferResized();
@@ -180,15 +188,14 @@ void Engine::loadDefaultScene(const std::string& modelPath) {
     Scene* scene = createScene("Main");
 
     const auto extent = m_renderTarget ? m_renderTarget->extent() : vk::Extent2D{1, 1};
-    const float aspect = static_cast<float>(extent.width) / static_cast<float>(extent.height);
 
-    Entity* cameraEntity = scene->createEntity("Camera");
-    auto* xf = cameraEntity->addComponent<TransformComponent>();
-    const glm::vec3 eye{3.0f, 3.0f, 3.0f};
-    xf->setPosition(eye);
-    xf->setRotation(glm::quatLookAt(glm::normalize(-eye), glm::vec3(0.0f, 0.0f, 1.0f)));
-    cameraEntity->addComponent<CameraComponent>(glm::radians(45.0f), aspect, 0.1f, 1000.0f);
-    scene->setActiveCamera(cameraEntity->id());
+    DefaultCameraConfig cfg{};
+    cfg.aspectRatio = static_cast<float>(extent.width) / static_cast<float>(extent.height);
+    Entity* cameraEntity = createDefaultCameraEntity(*scene, cfg);
+
+    if (auto* fly = cameraEntity->getComponent<FlyCameraController>()) {
+        fly->bindInput(*m_input);
+    }
 
     if (!modelPath.empty() && m_memoryManager) {
         uploadModelToScene(*scene, modelPath);

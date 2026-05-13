@@ -1,7 +1,7 @@
 #include "camera_component.h"
 
+#include "../components/transform_component.h"
 #include "../entities/entity.h"
-#include "transform_component.h"
 
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -18,10 +18,7 @@ CameraComponent::CameraComponent(float fovRadians, float aspectRatio,
 
 void CameraComponent::init() {}
 
-void CameraComponent::update(float deltaTime) {
-    auto* transform = m_owner->getComponent<TransformComponent>();
-    transform->setPosition(transform->position() + transform->position() * deltaTime * 0.1f);
-}
+void CameraComponent::update(float /*deltaTime*/) {}
 
 void CameraComponent::render() {}
 

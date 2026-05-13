@@ -1,6 +1,6 @@
 #pragma once
 
-#include "i_component.h"
+#include "../components/i_component.h"
 
 #include "common/glm_common.h"
 

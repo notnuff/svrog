@@ -2,8 +2,8 @@ set(TARGET_NAME editor)
 
 set(LIB_TARGET_NAME editor_lib)
 
-set(LIB_SOURCES editor_app.cpp qml_platform_config.cpp)
-set(LIB_HEADERS editor_app.h qml_initializer.h qml_platform_config.h)
+set(LIB_SOURCES editor_app.cpp qml_platform_config.cpp input/qt_input_translator.cpp)
+set(LIB_HEADERS editor_app.h qml_initializer.h qml_platform_config.h input/qt_input_translator.h)
 
 add_library(${LIB_TARGET_NAME}
         ${LIB_SOURCES}

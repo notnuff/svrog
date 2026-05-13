@@ -2,11 +2,15 @@
 
 #include <unistd.h>
 
+#include <QKeyEvent>
 #include <QLoggingCategory>
+#include <QMouseEvent>
 #include <QSGSimpleTextureNode>
 #include <QSGRendererInterface>
 
 #include "editor/editor_app.h"
+#include "editor/input/qt_input_translator.h"
+#include "engine/input/input_system.h"
 
 namespace L {
 Q_LOGGING_CATEGORY(vkViewport, "nuff.ui.vulkan_viewport")
@@ -15,6 +19,9 @@ Q_LOGGING_CATEGORY(vkViewport, "nuff.ui.vulkan_viewport")
 VulkanViewport::VulkanViewport()
 {
     setFlag(ItemHasContents, true);
+    setFlag(ItemIsFocusScope, true);
+    setAcceptedMouseButtons(Qt::AllButtons);
+    setAcceptHoverEvents(false);
     connect(this, &QQuickItem::windowChanged, this, &VulkanViewport::handleWindowChanged);
 }
 
@@ -244,4 +251,61 @@ QSGNode* VulkanViewport::updatePaintNode(QSGNode* oldNode, UpdatePaintNodeData*)
 void VulkanViewport::cleanup()
 {
     cleanupImportedImage();
+}
+
+void VulkanViewport::keyPressEvent(QKeyEvent* event)
+{
+    if (!m_engine) { QQuickItem::keyPressEvent(event); return; }
+    if (event->isAutoRepeat()) { event->accept(); return; }
+
+    using namespace nuff::editor::input;
+    const auto key  = translateKey(event->key());
+    const auto mods = translateModifiers(event->modifiers());
+    m_engine->input().postKey(key, nuff::engine::input::KeyAction::Press, mods);
+    event->accept();
+}
+
+void VulkanViewport::keyReleaseEvent(QKeyEvent* event)
+{
+    if (!m_engine) { QQuickItem::keyReleaseEvent(event); return; }
+    if (event->isAutoRepeat()) { event->accept(); return; }
+
+    using namespace nuff::editor::input;
+    const auto key  = translateKey(event->key());
+    const auto mods = translateModifiers(event->modifiers());
+    m_engine->input().postKey(key, nuff::engine::input::KeyAction::Release, mods);
+    event->accept();
+}
+
+void VulkanViewport::mousePressEvent(QMouseEvent* event)
+{
+    forceActiveFocus();
+    if (!m_engine) { QQuickItem::mousePressEvent(event); return; }
+
+    using namespace nuff::editor::input;
+    const auto button = translateMouseButton(event->button());
+    const auto mods   = translateModifiers(event->modifiers());
+    m_engine->input().postMouseButton(button, nuff::engine::input::KeyAction::Press,
+                                      event->position().x(), event->position().y(), mods);
+    event->accept();
+}
+
+void VulkanViewport::mouseReleaseEvent(QMouseEvent* event)
+{
+    if (!m_engine) { QQuickItem::mouseReleaseEvent(event); return; }
+
+    using namespace nuff::editor::input;
+    const auto button = translateMouseButton(event->button());
+    const auto mods   = translateModifiers(event->modifiers());
+    m_engine->input().postMouseButton(button, nuff::engine::input::KeyAction::Release,
+                                      event->position().x(), event->position().y(), mods);
+    event->accept();
+}
+
+void VulkanViewport::mouseMoveEvent(QMouseEvent* event)
+{
+    if (!m_engine) { QQuickItem::mouseMoveEvent(event); return; }
+
+    m_engine->input().postMouseMove(event->position().x(), event->position().y());
+    event->accept();
 }

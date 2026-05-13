@@ -59,8 +59,4 @@ std::string App::defaultScenePath() const {
     return {};
 }
 
-void App::onMouseMove(double /*x*/, double /*y*/) {}
-void App::onMouseButton(int /*button*/, int /*action*/, int /*mods*/) {}
-void App::onKey(int /*key*/, int /*scancode*/, int /*action*/, int /*mods*/) {}
-
 } // namespace nuff::app

@@ -11,6 +11,8 @@
 #include "primitives/mesh.h"
 #include "primitives/texture_image.h"
 
+#include <QtCore/qtclasshelpermacros.h>
+
 #include <cstdint>
 #include <memory>
 #include <string>
@@ -19,6 +21,7 @@
 namespace nuff::engine {
 
 namespace events { class EventBus; }
+namespace input  { class InputSystem; }
 
 struct ActiveSceneChangedEvent : public events::Event<ActiveSceneChangedEvent> {
     Scene* previous;
@@ -31,8 +34,7 @@ public:
     Engine();
     ~Engine();
 
-    Engine(const Engine&) = delete;
-    Engine& operator=(const Engine&) = delete;
+    Q_DISABLE_COPY(Engine)
 
     bool initialize(std::unique_ptr<PlatformConfig> config);
     void shutdown();
@@ -41,6 +43,9 @@ public:
     void onTargetResized(uint32_t width, uint32_t height);
 
     void loadDefaultScene(const std::string& modelPath);
+
+    input::InputSystem&       input();
+    const input::InputSystem& input() const;
 
     void tick(float dt);
 
@@ -75,7 +80,8 @@ private:
     bool m_initialized = false;
     std::vector<std::unique_ptr<Scene>> m_scenes;
     Scene*   m_activeScene = nullptr;
-    std::unique_ptr<events::EventBus> m_events;
+    std::unique_ptr<events::EventBus>   m_events;
+    std::unique_ptr<input::InputSystem> m_input;
 
     bool     m_paused = false;
     bool     m_stepRequested = false;

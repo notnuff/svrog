@@ -3,10 +3,14 @@
 #include "engine.h"
 #include "platform_config.h"
 
+#include <QtCore/qtclasshelpermacros.h>
+
 #include <chrono>
 #include <cstdint>
 #include <memory>
 #include <string>
+
+namespace nuff::engine::input { class InputSystem; }
 
 namespace nuff::app {
 
@@ -15,8 +19,7 @@ public:
     App();
     virtual ~App();
 
-    App(const App&) = delete;
-    App& operator=(const App&) = delete;
+    Q_DISABLE_COPY(App)
 
     bool initialize();
     void shutdown();
@@ -30,13 +33,12 @@ public:
     engine::Engine&       engineSystem()       { return m_engine; }
     const engine::Engine& engineSystem() const { return m_engine; }
 
+    engine::input::InputSystem&       input()       { return m_engine.input(); }
+    const engine::input::InputSystem& input() const { return m_engine.input(); }
+
 protected:
     virtual std::unique_ptr<engine::PlatformConfig> makePlatformConfig() = 0;
     virtual std::string                             defaultScenePath() const;
-
-    virtual void onMouseMove(double x, double y);
-    virtual void onMouseButton(int button, int action, int mods);
-    virtual void onKey(int key, int scancode, int action, int mods);
 
 private:
     engine::Engine                        m_engine;

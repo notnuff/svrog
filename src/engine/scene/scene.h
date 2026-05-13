@@ -3,6 +3,8 @@
 #include "../entities/entity.h"
 #include "scene_events.h"
 
+#include <QtCore/qtclasshelpermacros.h>
+
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -17,8 +19,7 @@ public:
     explicit Scene(std::string name);
     ~Scene();
 
-    Scene(const Scene&) = delete;
-    Scene& operator=(const Scene&) = delete;
+    Q_DISABLE_COPY(Scene)
 
     const std::string& name() const;
     void setName(std::string name);
