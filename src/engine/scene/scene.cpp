@@ -1,11 +1,15 @@
 #include "scene.h"
 
+#include "../events/event_bus.h"
+
 #include <algorithm>
 #include <utility>
 
 namespace nuff::engine {
 
-Scene::Scene(std::string name) : m_name(std::move(name)) {}
+Scene::Scene(std::string name)
+    : m_name(std::move(name)),
+      m_events(std::make_unique<events::EventBus>()) {}
 Scene::~Scene() = default;
 
 const std::string& Scene::name() const { return m_name; }
@@ -20,7 +24,7 @@ Entity* Scene::createEntity(std::string name, Entity* parent) {
 
     if (parent) raw->setParent(parent);
 
-    m_events.publish(EntityAddedEvent{raw->id()});
+    m_events->sendEvent(EntityAddedEvent{raw->id()});
     return raw;
 }
 
@@ -37,7 +41,7 @@ void Scene::destroyRecursive(Entity* entity) {
     if (it != m_entities.end()) {
         m_entities.erase(it);
     }
-    m_events.publish(EntityRemovedEvent{id});
+    m_events->sendEvent(EntityRemovedEvent{id});
 }
 
 void Scene::destroyEntity(EntityID id) {
@@ -57,13 +61,13 @@ void Scene::reparent(EntityID id, EntityID newParent) {
     Entity* p = newParent ? find(newParent) : nullptr;
     if (newParent && !p) return;
     e->setParent(p);
-    m_events.publish(EntityReparentedEvent{id, newParent});
+    m_events->sendEvent(EntityReparentedEvent{id, newParent});
 }
 
 void Scene::setActiveCamera(EntityID id) {
     if (id == m_activeCameraId) return;
     m_activeCameraId = id;
-    m_events.publish(ActiveCameraChangedEvent{id});
+    m_events->sendEvent(ActiveCameraChangedEvent{id});
 }
 
 Entity* Scene::activeCamera() const {
@@ -91,6 +95,6 @@ const std::vector<std::unique_ptr<Entity>>& Scene::entities() const {
     return m_entities;
 }
 
-EventBus& Scene::events() { return m_events; }
+events::EventBus& Scene::events() { return *m_events; }
 
 } // namespace nuff::engine

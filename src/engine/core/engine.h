@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../events/event_bus.h"
+#include "../events/i_event.h"
 #include "../scene/scene.h"
 #include "platform_config.h"
 
@@ -18,7 +18,13 @@
 
 namespace nuff::engine {
 
-struct ActiveSceneChangedEvent { Scene* previous; Scene* current; };
+namespace events { class EventBus; }
+
+struct ActiveSceneChangedEvent : public events::Event<ActiveSceneChangedEvent> {
+    Scene* previous;
+    Scene* current;
+    ActiveSceneChangedEvent(Scene* previous, Scene* current) : previous(previous), current(current) {}
+};
 
 class Engine {
 public:
@@ -50,7 +56,7 @@ public:
     bool isSimulationPaused() const;
     void stepOneFrame();
 
-    EventBus& globalEvents();
+    events::EventBus& globalEvents();
 
     uint64_t frameIndex() const;
     float    totalTime() const;
@@ -69,7 +75,7 @@ private:
     bool m_initialized = false;
     std::vector<std::unique_ptr<Scene>> m_scenes;
     Scene*   m_activeScene = nullptr;
-    EventBus m_events;
+    std::unique_ptr<events::EventBus> m_events;
 
     bool     m_paused = false;
     bool     m_stepRequested = false;

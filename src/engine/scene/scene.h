@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../entities/entity.h"
-#include "../events/event_bus.h"
+#include "scene_events.h"
 
 #include <memory>
 #include <string>
@@ -10,12 +10,7 @@
 
 namespace nuff::engine {
 
-struct EntityAddedEvent         { EntityID id; };
-struct EntityRemovedEvent       { EntityID id; };
-struct EntityReparentedEvent    { EntityID id; EntityID newParent; };
-struct ComponentAddedEvent      { EntityID id; size_t componentTypeId; };
-struct ComponentRemovedEvent    { EntityID id; size_t componentTypeId; };
-struct ActiveCameraChangedEvent { EntityID id; };
+namespace events { class EventBus; }
 
 class Scene {
 public:
@@ -43,7 +38,7 @@ public:
     std::vector<Entity*> rootEntities() const;
     const std::vector<std::unique_ptr<Entity>>& entities() const;
 
-    EventBus& events();
+    events::EventBus& events();
 
 private:
     void destroyRecursive(Entity* entity);
@@ -53,7 +48,7 @@ private:
     std::unordered_map<EntityID, Entity*> m_byId;
     EntityID m_nextId = 1;
     EntityID m_activeCameraId = 0;
-    EventBus m_events;
+    std::unique_ptr<events::EventBus> m_events;
 };
 
 } // namespace nuff::engine

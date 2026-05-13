@@ -24,21 +24,25 @@ signals:
 
 protected:
     QSGNode* updatePaintNode(QSGNode* oldNode, UpdatePaintNodeData*) override;
+    void geometryChange(const QRectF& newGeometry, const QRectF& oldGeometry) override;
 
 private slots:
-    void sync();
     void cleanup();
     void handleWindowChanged(QQuickWindow* win);
-    void onBeforeRendering();
+    void onSceneGraphInitialized();
+    void tryInitializeEngine();
+    void onFrameSwapped();
 
 private:
-    void initializeEngine();
     void importImage();
     void cleanupImportedImage();
 
     nuff::editor::EditorApp* m_engine = nullptr;
     bool m_initialized = false;
     bool m_needsImport = false;
+
+    uint32_t m_vendorId = 0;
+    uint32_t m_deviceId = 0;
 
     VkDevice m_qtDevice = VK_NULL_HANDLE;
     VkImage m_importedImage = VK_NULL_HANDLE;

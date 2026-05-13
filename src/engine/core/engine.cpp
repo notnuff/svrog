@@ -4,6 +4,7 @@
 #include "../components/mesh_component.h"
 #include "../components/transform_component.h"
 #include "../entities/entity.h"
+#include "../events/event_bus.h"
 #include "../systems/render_system.h"
 
 #include "resources/gltf_loader.h"
@@ -17,7 +18,7 @@
 
 namespace nuff::engine {
 
-Engine::Engine() = default;
+Engine::Engine() : m_events(std::make_unique<events::EventBus>()) {}
 Engine::~Engine() { shutdown(); }
 
 void Engine::notifyFramebufferResized() {
@@ -214,7 +215,7 @@ void Engine::setActiveScene(Scene* scene) {
     if (scene == m_activeScene) return;
     Scene* prev = m_activeScene;
     m_activeScene = scene;
-    m_events.publish(ActiveSceneChangedEvent{prev, scene});
+    m_events->sendEvent(ActiveSceneChangedEvent{prev, scene});
 }
 
 Scene* Engine::activeScene() const { return m_activeScene; }
@@ -224,7 +225,7 @@ void Engine::setSimulationPaused(bool paused) { m_paused = paused; }
 bool Engine::isSimulationPaused() const { return m_paused; }
 void Engine::stepOneFrame() { m_stepRequested = true; }
 
-EventBus& Engine::globalEvents() { return m_events; }
+events::EventBus& Engine::globalEvents() { return *m_events; }
 
 uint64_t Engine::frameIndex() const { return m_frameIndex; }
 float    Engine::totalTime() const  { return m_totalTime; }

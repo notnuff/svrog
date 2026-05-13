@@ -23,22 +23,24 @@ void VulkanViewport::setEngine(nuff::editor::EditorApp* engine)
     if (m_engine == engine) return;
     m_engine = engine;
     emit engineChanged();
+    QMetaObject::invokeMethod(this, &VulkanViewport::tryInitializeEngine,
+                              Qt::QueuedConnection);
 }
 
 void VulkanViewport::handleWindowChanged(QQuickWindow* win)
 {
     if (win) {
-        connect(win, &QQuickWindow::beforeSynchronizing,
-                this, &VulkanViewport::sync, Qt::DirectConnection);
-        connect(win, &QQuickWindow::beforeRendering,
-                this, &VulkanViewport::onBeforeRendering, Qt::DirectConnection);
+        connect(win, &QQuickWindow::sceneGraphInitialized,
+                this, &VulkanViewport::onSceneGraphInitialized, Qt::DirectConnection);
         connect(win, &QQuickWindow::sceneGraphInvalidated,
                 this, &VulkanViewport::cleanup, Qt::DirectConnection);
+        connect(win, &QQuickWindow::frameSwapped,
+                this, &VulkanViewport::onFrameSwapped, Qt::QueuedConnection);
         win->setColor(Qt::black);
     }
 }
 
-void VulkanViewport::initializeEngine()
+void VulkanViewport::onSceneGraphInitialized()
 {
     auto* rif = window()->rendererInterface();
     auto* physDev = static_cast<VkPhysicalDevice*>(
@@ -48,45 +50,58 @@ void VulkanViewport::initializeEngine()
     VkPhysicalDeviceProperties props;
     vkGetPhysicalDeviceProperties(*physDev, &props);
 
-    int w = std::max(1, static_cast<int>(width()));
-    int h = std::max(1, static_cast<int>(height()));
-
-    m_engine->initialize(props.vendorID, props.deviceID,
-                         static_cast<uint32_t>(w), static_cast<uint32_t>(h));
-
+    m_vendorId = props.vendorID;
+    m_deviceId = props.deviceID;
     m_qtDevice = *static_cast<VkDevice*>(
         rif->getResource(window(), QSGRendererInterface::DeviceResource));
 
-    m_needsImport = true;
-    m_initialized = true;
-    qCInfo(L::vkViewport) << "Engine initialized, Qt GPU:" << props.deviceName;
+    qCInfo(L::vkViewport) << "Scene graph ready, Qt GPU:" << props.deviceName;
+
+    QMetaObject::invokeMethod(this, &VulkanViewport::tryInitializeEngine,
+                              Qt::QueuedConnection);
 }
 
-void VulkanViewport::sync()
+void VulkanViewport::tryInitializeEngine()
 {
+    if (m_initialized) return;
     if (!m_engine || !window()) return;
+    if (m_qtDevice == VK_NULL_HANDLE) return;
 
-    if (!m_initialized) {
-        initializeEngine();
+    const auto w = static_cast<uint32_t>(std::max(1.0, width()));
+    const auto h = static_cast<uint32_t>(std::max(1.0, height()));
+
+    m_engine->initialize(m_vendorId, m_deviceId, w, h);
+    if (!m_engine->isInitialized()) {
+        qCWarning(L::vkViewport) << "Engine failed to initialize";
+        return;
     }
 
-    if (!m_engine->isInitialized()) return;
-
-    auto w = static_cast<uint32_t>(std::max(1.0, width()));
-    auto h = static_cast<uint32_t>(std::max(1.0, height()));
-    auto extent = m_engine->imageExtent();
-    if (extent.width != w || extent.height != h) {
-        m_engine->resize(w, h);
-        m_needsImport = true;
-    }
-
+    m_engine->renderFrame();
+    m_needsImport = true;
+    m_initialized = true;
     update();
 }
 
-void VulkanViewport::onBeforeRendering()
+void VulkanViewport::onFrameSwapped()
 {
-    if (!m_engine || !m_engine->isInitialized()) return;
+    if (!m_initialized || !m_engine || !m_engine->isInitialized()) return;
     m_engine->renderFrame();
+    update();
+}
+
+void VulkanViewport::geometryChange(const QRectF& newGeometry, const QRectF& oldGeometry)
+{
+    QQuickItem::geometryChange(newGeometry, oldGeometry);
+    if (!m_initialized || !m_engine || !m_engine->isInitialized()) return;
+
+    const auto w = static_cast<uint32_t>(std::max(1.0, newGeometry.width()));
+    const auto h = static_cast<uint32_t>(std::max(1.0, newGeometry.height()));
+    const auto extent = m_engine->imageExtent();
+    if (extent.width == w && extent.height == h) return;
+
+    m_engine->resize(w, h);
+    m_needsImport = true;
+    update();
 }
 
 void VulkanViewport::importImage()
