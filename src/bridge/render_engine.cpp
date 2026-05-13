@@ -15,7 +15,7 @@ RenderEngine::RenderEngine(QObject* parent)
 
 RenderEngine::~RenderEngine() {
     if (m_initialized) {
-        m_renderer.cleanup();
+        m_engine.shutdown();
     }
 }
 
@@ -50,10 +50,9 @@ void RenderEngine::initialize(uint32_t vendorId, uint32_t deviceId,
     std::string modelPath = (QCoreApplication::applicationDirPath()
         + "/models/mv_spartan/scene.gltf").toStdString();
 
-    m_renderer.setContext(m_ctx.get());
-    m_renderer.setRenderTarget(m_renderTarget.get());
-    m_renderer.setModelPath(modelPath);
-    m_renderer.initialize();
+    m_engine.setRenderContext(m_ctx.get(), m_renderTarget.get());
+    m_engine.initialize();
+    m_engine.loadDefaultScene(modelPath);
 
     m_initialized = true;
     qCInfo(L::renderEngine) << "Engine initialized successfully";
@@ -61,7 +60,16 @@ void RenderEngine::initialize(uint32_t vendorId, uint32_t deviceId,
 
 void RenderEngine::renderFrame() {
     if (!m_initialized) return;
-    m_renderer.drawFrame();
+
+    const auto now = std::chrono::steady_clock::now();
+    float dt = 0.0f;
+    if (m_hasLastFrameTime) {
+        dt = std::chrono::duration<float>(now - m_lastFrameTime).count();
+    }
+    m_lastFrameTime = now;
+    m_hasLastFrameTime = true;
+
+    m_engine.tick(dt);
 }
 
 void RenderEngine::resize(uint32_t width, uint32_t height) {
@@ -72,6 +80,8 @@ void RenderEngine::resize(uint32_t width, uint32_t height) {
     if (currentExtent.width == width && currentExtent.height == height) return;
 
     m_renderTarget->resize(width, height);
+    m_engine.onTargetResized(width, height);
+
     qCInfo(L::renderEngine) << "Resized to" << width << "x" << height;
 }
 

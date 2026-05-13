@@ -13,6 +13,7 @@ target_link_libraries(${TARGET_NAME} PRIVATE
         Qt6::Quick
         Vulkan::Vulkan
         renderer
+        engine
 )
 
 target_include_directories(${TARGET_NAME}

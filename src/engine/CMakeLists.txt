@@ -13,6 +13,7 @@ add_library(${TARGET_NAME}
 
 target_link_libraries(${TARGET_NAME} PUBLIC
         glm::glm
+        renderer
 )
 
 target_link_libraries(${TARGET_NAME} PRIVATE

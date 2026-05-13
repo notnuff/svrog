@@ -2,32 +2,30 @@
 
 #include "i_component.h"
 
-#include "common/glm_common.h"
+#include "common/vk_common.h"
 
-#include <string>
+namespace nuff::renderer { class Mesh; }
 
 namespace nuff::engine {
 
-class MeshHandle;
-class MaterialHandle;
-
 class MeshComponent : public IComponent {
 public:
-    MeshComponent(MeshHandle* mesh = nullptr, MaterialHandle* material = nullptr);
+    MeshComponent() = default;
+    MeshComponent(const renderer::Mesh* mesh, vk::DescriptorSet materialSet);
 
     void init() override;
     void update(float deltaTime) override;
     void render() override;
 
-    void setMesh(MeshHandle* mesh);
-    MeshHandle* mesh() const;
+    void setMesh(const renderer::Mesh* mesh);
+    const renderer::Mesh* mesh() const;
 
-    void setMaterial(MaterialHandle* material);
-    MaterialHandle* material() const;
+    void setMaterialSet(vk::DescriptorSet set);
+    vk::DescriptorSet materialSet() const;
 
 private:
-    MeshHandle* m_mesh = nullptr;
-    MaterialHandle* m_material = nullptr;
+    const renderer::Mesh* m_mesh = nullptr;
+    vk::DescriptorSet m_materialSet{};
 };
 
 } // namespace nuff::engine

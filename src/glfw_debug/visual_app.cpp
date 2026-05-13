@@ -54,7 +54,6 @@ void VkVisualTestApp::initRenderer() {
     std::string shaderPath = "shaders/triangle_shader.spv";
     qCInfo(L::vkVisualApp) << "Loading shader from:" << shaderPath.c_str();
 
-    // Set GLFW extensions and surface creator on the initializer
     initializer.setGlfwExtensions(extensions);
     initializer.setSurfaceCreator([this](VkInstance instance) {
         VkSurfaceKHR surface;
@@ -72,18 +71,15 @@ void VkVisualTestApp::initRenderer() {
     m_ctx = initializer.buildCtx();
     m_renderTarget = std::make_unique<SwapchainRenderTarget>(m_ctx.get());
 
-    m_renderer.setContext(m_ctx.get());
-    m_renderer.setRenderTarget(m_renderTarget.get());
-    m_renderer.setModelPath("models/mv_spartan/scene.gltf");
-    m_renderer.setRecreateCallback([this]() {
-        recreateSwapchain();
-    });
-    m_renderer.initialize();
+    m_engine.setRenderContext(m_ctx.get(), m_renderTarget.get());
+    m_engine.setRecreateCallback([this]() { recreateSwapchain(); });
+    m_engine.initialize();
+    m_engine.loadDefaultScene("models/mv_spartan/scene.gltf");
 }
 
 void VkVisualTestApp::framebufferResizeCallback(GLFWwindow* window, int /*width*/, int /*height*/) {
     auto* app = reinterpret_cast<VkVisualTestApp*>(glfwGetWindowUserPointer(window));
-    app->m_renderer.notifyFramebufferResized();
+    app->m_engine.notifyFramebufferResized();
 }
 
 void VkVisualTestApp::recreateSwapchain() {
@@ -105,6 +101,7 @@ void VkVisualTestApp::recreateSwapchain() {
     swapchainBuilder.build(*m_ctx);
 
     m_renderTarget->recreateResources();
+    m_engine.onTargetResized(static_cast<uint32_t>(width), static_cast<uint32_t>(height));
 
     qCInfo(L::vkVisualApp) << "Swapchain recreated (" << width << "x" << height << ")";
 }
@@ -113,12 +110,21 @@ void VkVisualTestApp::mainLoop() {
     qCInfo(L::vkVisualApp) << "Entering main loop. Close window to exit.";
     while (!glfwWindowShouldClose(m_window)) {
         glfwPollEvents();
-        m_renderer.drawFrame();
+
+        const auto now = std::chrono::steady_clock::now();
+        float dt = 0.0f;
+        if (m_hasLastFrameTime) {
+            dt = std::chrono::duration<float>(now - m_lastFrameTime).count();
+        }
+        m_lastFrameTime = now;
+        m_hasLastFrameTime = true;
+
+        m_engine.tick(dt);
     }
 }
 
 void VkVisualTestApp::cleanup() {
-    m_renderer.cleanup();
+    m_engine.shutdown();
     m_renderTarget.reset();
     m_ctx.reset();
 
@@ -128,4 +134,3 @@ void VkVisualTestApp::cleanup() {
 }
 
 } // namespace nuff::renderer
-
