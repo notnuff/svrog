@@ -18,7 +18,10 @@ CameraComponent::CameraComponent(float fovRadians, float aspectRatio,
 
 void CameraComponent::init() {}
 
-void CameraComponent::update(float /*deltaTime*/) {}
+void CameraComponent::update(float deltaTime) {
+    auto* transform = m_owner->getComponent<TransformComponent>();
+    transform->setPosition(transform->position() + transform->position() * deltaTime * 0.1f);
+}
 
 void CameraComponent::render() {}
 

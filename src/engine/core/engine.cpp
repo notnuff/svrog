@@ -6,7 +6,7 @@
 #include "../entities/entity.h"
 #include "../systems/render_system.h"
 
-#include "assets/gltf_loader.h"
+#include "resources/gltf_loader.h"
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/quaternion.hpp>
@@ -19,18 +19,6 @@ namespace nuff::engine {
 
 Engine::Engine() = default;
 Engine::~Engine() { shutdown(); }
-
-void Engine::setRenderContext(renderer::CoreCtx* ctx, renderer::IRenderTarget* target) {
-    m_ctx = ctx;
-    m_renderTarget = target;
-    m_renderer.setContext(ctx);
-    m_renderer.setRenderTarget(target);
-    if (ctx) m_memoryManager = std::make_unique<renderer::MemoryManager>(*ctx);
-}
-
-void Engine::setRecreateCallback(RecreateCallback callback) {
-    m_renderer.setRecreateCallback(std::move(callback));
-}
 
 void Engine::notifyFramebufferResized() {
     m_renderer.notifyFramebufferResized();
@@ -48,10 +36,31 @@ void Engine::onTargetResized(uint32_t width, uint32_t height) {
     }
 }
 
-void Engine::initialize() {
-    if (m_initialized) return;
-    if (m_ctx && m_renderTarget) m_renderer.initialize();
+bool Engine::initialize(std::unique_ptr<PlatformConfig> config) {
+    if (m_initialized) return false;
+    if (!config) return false;
+
+    m_platform = std::move(config);
+
+    m_ctx = m_platform->buildContext();
+    if (!m_ctx) return false;
+
+    m_renderTarget = m_platform->createRenderTarget(*m_ctx);
+    if (!m_renderTarget) return false;
+
+    m_memoryManager = std::make_unique<renderer::MemoryManager>(*m_ctx);
+
+    m_renderer.setContext(m_ctx.get());
+    m_renderer.setRenderTarget(m_renderTarget.get());
+    m_renderer.setRecreateCallback([this]() {
+        m_platform->onRecreate(*m_ctx, *m_renderTarget);
+        const auto ext = m_renderTarget->extent();
+        onTargetResized(ext.width, ext.height);
+    });
+    m_renderer.initialize();
+
     m_initialized = true;
+    return true;
 }
 
 void Engine::shutdown() {
@@ -64,7 +73,10 @@ void Engine::shutdown() {
     m_materialPool = nullptr;
     m_textures.clear();
     m_meshes.clear();
+    m_renderTarget.reset();
     m_memoryManager.reset();
+    m_platform.reset();
+    m_ctx.reset();
     m_initialized = false;
 }
 

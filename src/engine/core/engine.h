@@ -2,16 +2,16 @@
 
 #include "../events/event_bus.h"
 #include "../scene/scene.h"
+#include "platform_config.h"
 
-#include "core/context/ctx.h"
-#include "core/memory/memory_manager.h"
-#include "core/renderer/renderer.h"
+#include "context/ctx.h"
+#include "memory/memory_manager.h"
+#include "rendering/renderer.h"
 #include "presentation/i_render_target.h"
 #include "primitives/mesh.h"
 #include "primitives/texture_image.h"
 
 #include <cstdint>
-#include <functional>
 #include <memory>
 #include <string>
 #include <vector>
@@ -22,22 +22,19 @@ struct ActiveSceneChangedEvent { Scene* previous; Scene* current; };
 
 class Engine {
 public:
-    using RecreateCallback = std::function<void()>;
-
     Engine();
     ~Engine();
 
     Engine(const Engine&) = delete;
     Engine& operator=(const Engine&) = delete;
 
-    void setRenderContext(renderer::CoreCtx* ctx, renderer::IRenderTarget* target);
-    void setRecreateCallback(RecreateCallback callback);
+    bool initialize(std::unique_ptr<PlatformConfig> config);
+    void shutdown();
+
     void notifyFramebufferResized();
     void onTargetResized(uint32_t width, uint32_t height);
 
-    void initialize();
     void loadDefaultScene(const std::string& modelPath);
-    void shutdown();
 
     void tick(float dt);
 
@@ -59,6 +56,12 @@ public:
     float    totalTime() const;
     float    deltaTime() const;
 
+    renderer::CoreCtx*       context()      const { return m_ctx.get(); }
+    renderer::IRenderTarget* renderTarget() const { return m_renderTarget.get(); }
+    template <class T> T*    renderTargetAs() const {
+        return static_cast<T*>(m_renderTarget.get());
+    }
+
 private:
     void uploadModelToScene(Scene& scene, const std::string& modelPath);
     void buildMaterialDescriptorPool(uint32_t materialCount);
@@ -75,9 +78,10 @@ private:
     float    m_totalTime = 0.0f;
     float    m_deltaTime = 0.0f;
 
-    renderer::CoreCtx*        m_ctx = nullptr;
-    renderer::IRenderTarget*  m_renderTarget = nullptr;
-    renderer::Renderer        m_renderer;
+    std::unique_ptr<PlatformConfig>          m_platform;
+    std::unique_ptr<renderer::CoreCtx>       m_ctx;
+    std::unique_ptr<renderer::IRenderTarget> m_renderTarget;
+    renderer::Renderer                       m_renderer;
     std::unique_ptr<renderer::MemoryManager> m_memoryManager;
 
     std::vector<std::unique_ptr<renderer::Mesh>>         m_meshes;

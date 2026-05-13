@@ -23,10 +23,11 @@
       }
     },
     {
-      "name": "renderer-debug",
+      "name": "runtime-debug",
       "inherits": "debug",
       "cacheVariables": {
-        "BUILD_STANDALONE_GLFW_RENDERER": "ON",
+        "BUILD_EDITOR": "OFF",
+        "BUILD_RUNTIME": "ON",
         "ENABLE_CLANG_TIDY": "OFF"
       }
     },
